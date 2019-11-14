@@ -381,6 +381,7 @@ public:
         : detail::strict_fstream_holder< strict_fstream::ifstream >(filename, mode),
           std::istream(new istreambuf(_fs.rdbuf()))
     {
+        this->setstate(_fs.rdstate());
         exceptions(std::ios_base::badbit);
     }
     virtual ~ifstream()
