@@ -364,6 +364,7 @@ namespace detail
 template < typename FStream_Type >
 struct strict_fstream_holder
 {
+    strict_fstream_holder() {};
     strict_fstream_holder(const std::string& filename, std::ios_base::openmode mode = std::ios_base::in)
         : _fs(filename, mode)
     {}
@@ -377,6 +378,7 @@ class ifstream
       public std::istream
 {
 public:
+    ifstream() : std::istream(new istreambuf(_fs.rdbuf())) {}
     explicit ifstream(const std::string& filename, std::ios_base::openmode mode = std::ios_base::in)
         : detail::strict_fstream_holder< strict_fstream::ifstream >(filename, mode),
           std::istream(new istreambuf(_fs.rdbuf()))
