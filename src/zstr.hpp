@@ -9,6 +9,7 @@
 #ifndef __ZSTR_HPP
 #define __ZSTR_HPP
 
+#include <iostream>
 #include <cassert>
 #include <fstream>
 #include <sstream>
