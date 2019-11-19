@@ -20,11 +20,11 @@ namespace zstr
 {
 
 /// Exception class thrown by failed zlib operations.
-class Exception
+class zException
     : public std::exception
 {
 public:
-    Exception(z_stream * zstrm_p, int ret)
+    zException(z_stream * zstrm_p, int ret)
         : _msg("zlib: ")
     {
         switch (ret)
@@ -52,7 +52,7 @@ public:
         }
         _msg += zstrm_p->msg;
     }
-    Exception(const std::string msg) : _msg(msg) {}
+    zException(const std::string msg) : _msg(msg) {}
     const char * what() const noexcept { return _msg.c_str(); }
 private:
     std::string _msg;
@@ -60,7 +60,6 @@ private:
 
 namespace detail
 {
-
 class z_stream_wrapper
     : public z_stream
 {
@@ -82,7 +81,7 @@ public:
         {
             ret = deflateInit2(this, _level, Z_DEFLATED, 15+16, 8, Z_DEFAULT_STRATEGY);
         }
-        if (ret != Z_OK) throw Exception(this, ret);
+        if (ret != Z_OK) throw zException(this, ret);
     }
     ~z_stream_wrapper()
     {
@@ -185,7 +184,7 @@ public:
                     zstrm_p->avail_out = (out_buff + buff_size) - out_buff_free_start;
                     int ret = inflate(zstrm_p, Z_NO_FLUSH);
                     // process return code
-                    if (ret != Z_OK && ret != Z_STREAM_END) throw Exception(zstrm_p, ret);
+                    if (ret != Z_OK && ret != Z_STREAM_END) throw zException(zstrm_p, ret);
                     // update in&out pointers following inflate()
                     in_buff_start = reinterpret_cast< decltype(in_buff_start) >(zstrm_p->next_in);
                     in_buff_end = in_buff_start + zstrm_p->avail_in;
@@ -251,7 +250,7 @@ public:
             zstrm_p->next_out = reinterpret_cast< decltype(zstrm_p->next_out) >(out_buff);
             zstrm_p->avail_out = buff_size;
             int ret = deflate(zstrm_p, flush);
-            if (ret != Z_OK && ret != Z_STREAM_END && ret != Z_BUF_ERROR) throw Exception(zstrm_p, ret);
+            if (ret != Z_OK && ret != Z_STREAM_END && ret != Z_BUF_ERROR) throw zException(zstrm_p, ret);
             std::streamsize sz = sbuf_p->sputn(out_buff, reinterpret_cast< decltype(out_buff) >(zstrm_p->next_out) - out_buff);
             if (sz != reinterpret_cast< decltype(out_buff) >(zstrm_p->next_out) - out_buff)
             {
