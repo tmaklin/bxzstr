@@ -1,5 +1,5 @@
-#ifndef __STRICT_FSTREAM_HPP
-#define __STRICT_FSTREAM_HPP
+#ifndef BXZSTR_STRICT_FSTREAM_HPP
+#define BXZSTR_STRICT_FSTREAM_HPP
 
 #include <cassert>
 #include <fstream>

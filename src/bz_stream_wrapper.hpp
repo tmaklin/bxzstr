@@ -1,5 +1,5 @@
-#ifndef BZ2_STREAM_WRAPPER_HPP
-#define BZ2_STREAM_WRAPPER_HPP
+#ifndef BXZSTR_BZ_STREAM_WRAPPER_HPP
+#define BXZSTR_BZ_STREAM_WRAPPER_HPP
 
 #include <bzlib.h>
 

@@ -1,5 +1,5 @@
-#ifndef Z_STREAM_WRAPPER_HPP
-#define Z_STREAM_WRAPPER_HPP
+#ifndef BXZSTR_Z_STREAM_WRAPPER_HPP
+#define BXZSTR_Z_STREAM_WRAPPER_HPP
 
 #include <zlib.h>
 

@@ -1,5 +1,5 @@
-#ifndef STREAM_WRAPPER_HPP
-#define STREAM_WRAPPER_HPP
+#ifndef BXZSTR_STREAM_WRAPPER_HPP
+#define BXZSTR_STREAM_WRAPPER_HPP
 
 namespace bxz {
 namespace detail {

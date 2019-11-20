@@ -1,5 +1,5 @@
-#ifndef __BXZSTREAM_HPP
-#define __BXZSTREAM_HPP
+#ifndef BXZSTR_BXZSTR_HPP
+#define BXZSTR_BXZSTR_HPP
 
 #include <fstream>
 
