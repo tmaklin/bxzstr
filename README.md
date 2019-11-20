@@ -6,9 +6,9 @@ compressed with ZLib, libBZ2, or liblzma (.gz, .bz2, and .xz files).
 For decompression, the format is automatically detected. For
 compression, the only parameter exposed is the compression algorithm.
 
-The core functionality of this library is largely based on the
-[zstr](https://github.com/mateidavid/zstr) library by [Matei
-David](https://github.com/mateidavid).
+bxzstr is a fork of the [zstr](https://github.com/mateidavid/zstr)
+library by [Matei David](https://github.com/mateidavid), and the core
+functionality of this library remains largely the same.
 
 ## Input detection
 
