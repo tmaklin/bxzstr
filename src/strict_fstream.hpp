@@ -1,3 +1,13 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ *
+ * This file is a part of bxzstr (https://github.com/tmaklin/bxzstr)
+ * Written by Tommi Mäklin (tommi@maklin.fi)
+ * The core functionality is largely based on the strict_fstream.hpp
+ * file from the zstr project https://github.com/mateidavid/zstr
+ * written by Matei David (https://github.com/mateidavid). */
+
 #ifndef BXZSTR_STRICT_FSTREAM_HPP
 #define BXZSTR_STRICT_FSTREAM_HPP
 
