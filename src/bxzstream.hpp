@@ -2,49 +2,12 @@
 #define __BXZSTREAM_HPP
 
 #include <fstream>
-#include <iostream>
-#include <lzma.h>
 
-#include "bz_stream_wrapper.hpp"
-#include "strict_fstream.hpp"
 #include "stream_wrapper.hpp"
-#include "lzma_stream_wrapper.hpp"
-#include "z_stream_wrapper.hpp"
+#include "strict_fstream.hpp"
+#include "compression_types.hpp"
 
 namespace bxz {
-    enum Compression { z, bz2, lzma, plaintext };
-    Compression detect_type(char* in_buff_start, char* in_buff_end) {
-	unsigned char b0 = *reinterpret_cast< unsigned char * >(in_buff_start);
-	unsigned char b1 = *reinterpret_cast< unsigned char * >(in_buff_start + 1);
-        if (in_buff_start + 2 <= in_buff_end
-	    && ((b0 == 0x1F && b1 == 0x8B)         // gzip header
-		|| (b0 == 0x78 && (b1 == 0x01      // zlib header
-				   || b1 == 0x9C
-				   || b1 == 0xDA))))
-	    return z;
-	unsigned char b2 = *reinterpret_cast< unsigned char * >(in_buff_start + 2);
-        if (in_buff_start + 2 <= in_buff_end
-	   && ((b0 == 0x42 && b1 == 0x5a && b2 == 0x68))) // bz2 header
-	    return bz2;
-	unsigned char b3 = *reinterpret_cast< unsigned char * >(in_buff_start + 3);
-	unsigned char b4 = *reinterpret_cast< unsigned char * >(in_buff_start + 4);
-	unsigned char b5 = *reinterpret_cast< unsigned char * >(in_buff_start + 5);
-	if (in_buff_start + 6 <= in_buff_end
-	    && ((b0 == 0xFD && b1 == 0x37 && b2 == 0x7A
-		 && b3 == 0x58 && b4 == 0x5A && b5 == 0x00))) // liblzma header
-	    return lzma;
-	return plaintext;
-    }
-    void init_stream(const Compression &type, detail::stream_wrapper **strm_p) {
-	switch (type) {
-	case lzma : *strm_p = new detail::lzma_stream_wrapper(true); break;
-	case bz2 : *strm_p = new detail::bz_stream_wrapper(true); break;
-	case z : *strm_p = new detail::z_stream_wrapper(true); break;
-	default : throw std::runtime_error("Unrecognized compression type.");
-	}
-    }
-
-
 class istreambuf
     : public std::streambuf
 {
@@ -54,7 +17,7 @@ private:
     char * in_buff_start;
     char * in_buff_end;
     char * out_buff;
-    detail::stream_wrapper * lzmastrm_p;
+    detail::stream_wrapper * strm_p;
     std::size_t buff_size;
     bool auto_detect;
     bool auto_detect_run;
@@ -66,7 +29,7 @@ public:
     istreambuf(std::streambuf * _sbuf_p,
                std::size_t _buff_size = default_buff_size, bool _auto_detect = true)
         : sbuf_p(_sbuf_p),
-          lzmastrm_p(nullptr),
+          strm_p(nullptr),
           buff_size(_buff_size),
           auto_detect(_auto_detect),
           auto_detect_run(false),
@@ -89,7 +52,7 @@ public:
     {
         delete [] in_buff;
         delete [] out_buff;
-        if (lzmastrm_p) delete lzmastrm_p;
+        if (strm_p) delete strm_p;
     }
 
     virtual std::streambuf::int_type underflow()
@@ -126,25 +89,25 @@ public:
                 else
                 {
                     // run inflate() on input
-		    if (! lzmastrm_p) {
-			init_stream(this->type, &lzmastrm_p);
+		    if (! strm_p) {
+			init_stream(this->type, &strm_p);
 		    }
-		    lzmastrm_p->set_next_in(reinterpret_cast< decltype(lzmastrm_p->next_in()) >(in_buff_start));
-		    lzmastrm_p->set_avail_in(in_buff_end - in_buff_start);
-		    lzmastrm_p->set_next_out(reinterpret_cast< decltype(lzmastrm_p->next_out()) >(out_buff_free_start));
-		    lzmastrm_p->set_avail_out((out_buff + buff_size) - out_buff_free_start);
-		    lzmastrm_p->decompress();
+		    strm_p->set_next_in(reinterpret_cast< decltype(strm_p->next_in()) >(in_buff_start));
+		    strm_p->set_avail_in(in_buff_end - in_buff_start);
+		    strm_p->set_next_out(reinterpret_cast< decltype(strm_p->next_out()) >(out_buff_free_start));
+		    strm_p->set_avail_out((out_buff + buff_size) - out_buff_free_start);
+		    strm_p->decompress();
                     // update in&out pointers following inflate()
-		    auto tmp = const_cast< unsigned char* >(lzmastrm_p->next_in()); // cast away const qualifiers
+		    auto tmp = const_cast< unsigned char* >(strm_p->next_in()); // cast away const qualifiers
                     in_buff_start = reinterpret_cast< decltype(in_buff_start) >(tmp);
-                    in_buff_end = in_buff_start + lzmastrm_p->avail_in();
-                    out_buff_free_start = reinterpret_cast< decltype(out_buff_free_start) >(lzmastrm_p->next_out());
-                    assert(out_buff_free_start + lzmastrm_p->avail_out() == out_buff + buff_size);
+                    in_buff_end = in_buff_start + strm_p->avail_in();
+                    out_buff_free_start = reinterpret_cast< decltype(out_buff_free_start) >(strm_p->next_out());
+                    assert(out_buff_free_start + strm_p->avail_out() == out_buff + buff_size);
                     // if stream ended, deallocate inflator
-                    if (lzmastrm_p->stream_end())
+                    if (strm_p->stream_end())
                     {
-                        delete lzmastrm_p;
-                        lzmastrm_p = nullptr;
+                        delete strm_p;
+                        strm_p = nullptr;
                     }
                 }
             } while (out_buff_free_start == out_buff);
@@ -161,18 +124,17 @@ public:
 
 class ostreambuf : public std::streambuf {
 private:
-    Compression type;
     std::streambuf * sbuf_p;
     char * in_buff;
     char * out_buff;
     detail::stream_wrapper * strm_p;
     std::size_t buff_size;
+    Compression type;
 
     static const std::size_t default_buff_size = (std::size_t)1 << 20;
 public:
-    ostreambuf(std::streambuf * _sbuf_p,
-               std::size_t _buff_size = default_buff_size, int _level = 2,
-	       Compression type = lzma)
+    ostreambuf(std::streambuf * _sbuf_p, Compression type,
+               std::size_t _buff_size = default_buff_size, int _level = 2)
         : sbuf_p(_sbuf_p),
           buff_size(_buff_size),
 	  type(type)
@@ -181,12 +143,7 @@ public:
         in_buff = new char [buff_size];
         out_buff = new char [buff_size];
         setp(in_buff, in_buff + buff_size);
-	switch (type) {
-	case lzma : strm_p = new detail::lzma_stream_wrapper(true, _level); break;
-	// case bz2 : strm_p = new detail::bz_stream_wrapper(true); break;
-	// case z : strm_p = new detail::z_stream_wrapper(true); break;
-	default : throw std::runtime_error("Unrecognized compression type.");
-	}
+	init_stream(this->type, &strm_p, false);
     }
 
     ostreambuf(const ostreambuf &) = delete;
@@ -200,10 +157,7 @@ public:
         {
             strm_p->set_next_out(reinterpret_cast< decltype(strm_p->next_out()) >(out_buff));
             strm_p->set_avail_out(buff_size);
-	    strm_p->decompress(action);
-
-            // lzma_ret ret = lzma_code(lzmastrm_p, action);
-            // if (ret != LZMA_OK && ret != LZMA_STREAM_END && ret != LZMA_BUF_ERROR) throw lzmaException(lzmastrm_p, ret);
+	    strm_p->compress(action);
 
             std::streamsize sz = sbuf_p->sputn(out_buff, reinterpret_cast< decltype(out_buff) >(strm_p->next_out()) - out_buff);
             if (sz != reinterpret_cast< decltype(out_buff) >(strm_p->next_out()) - out_buff)
@@ -211,7 +165,7 @@ public:
                 // there was an error in the sink stream
                 return -1;
             }
-	    if (strm_p->stream_end() || strm_p->buf_error() || sz == 0)
+	    if (strm_p->done() || sz == 0)
 		break;
         }
         return 0;
@@ -238,7 +192,7 @@ public:
         strm_p->set_avail_in(pptr() - pbase());
         while (strm_p->avail_in() > 0)
         {
-            int r = deflate_loop(LZMA_RUN);
+            int r = deflate_loop(bxz_run(this->type));
             if (r != 0)
             {
                 setp(nullptr, nullptr);
@@ -256,18 +210,12 @@ public:
         // then, call deflate asking to finish the zlib stream
         strm_p->set_next_in(nullptr);
         strm_p->set_avail_in(0);
-        if (deflate_loop(LZMA_FINISH) != 0) return -1;
+        if (deflate_loop(bxz_finish(this->type)) != 0) return -1;
 	delete strm_p;
-	switch (type) {
-	case lzma : strm_p = new detail::lzma_stream_wrapper(true, 2); break;
-	// case bz2 : strm_p = new detail::bz_stream_wrapper(true); break;
-	// case z : strm_p = new detail::z_stream_wrapper(true); break;
-	default : throw std::runtime_error("Unrecognized compression type.");
-	}
+	init_stream(this->type, &strm_p, false);
         return 0;
     }
 }; // class ostreambuf
-
 
 class istream
     : public std::istream
@@ -293,13 +241,13 @@ class ostream
     : public std::ostream
 {
 public:
-    ostream(std::ostream & os)
-        : std::ostream(new ostreambuf(os.rdbuf()))
+    ostream(std::ostream & os, Compression type = plaintext)
+        : std::ostream(new ostreambuf(os.rdbuf(), type))
     {
         exceptions(std::ios_base::badbit);
     }
-    explicit ostream(std::streambuf * sbuf_p)
-        : std::ostream(new ostreambuf(sbuf_p))
+    explicit ostream(std::streambuf * sbuf_p, Compression type = z)
+        : std::ostream(new ostreambuf(sbuf_p, type))
     {
         exceptions(std::ios_base::badbit);
     }
@@ -348,12 +296,14 @@ class ofstream
       public std::ostream
 {
 public:
-    explicit ofstream(const std::string& filename, std::ios_base::openmode mode = std::ios_base::out)
+    explicit ofstream(const std::string& filename, std::ios_base::openmode mode = std::ios_base::out, Compression type = z)
         : detail::strict_fstream_holder< strict_fstream::ofstream >(filename, mode | std::ios_base::binary),
-	std::ostream(new ostreambuf(_fs.rdbuf()))
+	std::ostream(new ostreambuf(_fs.rdbuf(), type))
     {
         exceptions(std::ios_base::badbit);
     }
+    explicit ofstream(const std::string& filename, Compression type)
+	: ofstream(filename, std::ios_base::out, type) {}
     virtual ~ofstream()
     {
         if (rdbuf()) delete rdbuf();

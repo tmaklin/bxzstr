@@ -95,11 +95,17 @@ namespace detail {
 	    if (ret != Z_OK && ret != Z_STREAM_END) throw zException(this, ret);
 	    return ret;
 	}
+	int compress(int _flags = Z_NO_FLUSH) override {
+            ret = deflate(this, _flags);
+            if (ret != Z_OK && ret != Z_STREAM_END && ret != Z_BUF_ERROR)
+		throw zException(this, ret);
+	    return ret;
+	}
 	bool stream_end() const override {
 	    return this->ret == Z_STREAM_END;
 	}
-	bool buf_error() const override {
-	    return this->ret == Z_BUF_ERROR;
+	bool done() const override {
+	    return (this->ret == Z_BUF_ERROR || this->stream_end());
 	}
 	const uint8_t* next_in() override { return z_stream::next_in; }
 	long avail_in() override { return z_stream::avail_in; }

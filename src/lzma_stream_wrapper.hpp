@@ -81,18 +81,23 @@ namespace detail {
 	}
 	~lzma_stream_wrapper() { lzma_end(this); }
 	int decompress(int _flags = 0) override {
-	    //	    lzma_action action = (lzma_action)_flags;
 	    ret = lzma_code(this, LZMA_RUN);
 	    if (ret != LZMA_OK && ret != LZMA_STREAM_END && ret) {
 		throw lzmaException(this, ret);
 	    }
 	    return (int)ret;
 	}
+	int compress(int _flags = LZMA_RUN) override {
+	    ret = lzma_code(this, (lzma_action)_flags);
+	    if (ret != LZMA_OK && ret != LZMA_STREAM_END && ret != LZMA_BUF_ERROR)
+		throw lzmaException(this, ret);
+	    return (int)ret;
+	}
 	bool stream_end() const override {
 	    return this->ret == LZMA_STREAM_END;
 	}
-	bool buf_error() const override {
-	    return this->ret == LZMA_BUF_ERROR;
+	bool done() const override {
+	    return (this->ret == LZMA_BUF_ERROR || this->stream_end());
 	}
 	const uint8_t* next_in() override { return lzma_stream::next_in; }
 	long avail_in() override { return lzma_stream::avail_in; }

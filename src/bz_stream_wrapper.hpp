@@ -109,11 +109,17 @@ namespace detail {
 	    }
 	    return ret;
 	}
+	int compress(int _flags = BZ_RUN) override {
+	    ret = BZ2_bzCompress(this, _flags);
+	    if (!ret)
+		throw bzException(this, ret);
+	    return ret;
+	}
 	bool stream_end() const override {
 	    return this->ret == BZ_STREAM_END;
 	}
-	bool buf_error() const override {
-	    return 0;
+	bool done() const override {
+	    return this->stream_end();
 	}
 	const uint8_t* next_in() override { return (uint8_t*)bz_stream::next_in; }
 	long avail_in() override { return bz_stream::avail_in; }
