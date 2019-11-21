@@ -51,7 +51,22 @@ will be turned on.
 * libz, libbz2, and liblzma
 
 You can use the library without one of libz, libbz2, or liblzma by
-commenting out the relevant parts in `compression_types.hpp`.
+commenting out the the releant include in `compression_types.hpp`. For
+example, to disable lzma support, comment out lzma_stream_wrapper.hpp
+as follows:
+```
+#ifndef BXZSTR_COMPRESSION_TYPES_HPP
+#define BXZSTR_COMPRESSION_TYPES_HPP
+
+#include <exception>
+
+#include "stream_wrapper.hpp"
+#include "bz_stream_wrapper.hpp"
+// #include "lzma_stream_wrapper.hpp"
+#include "z_stream_wrapper.hpp"
+
+```
+The rest of the header will configure itself accordingly.
 
 ## License
 The source code from this project is subject to the terms of the
