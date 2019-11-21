@@ -283,25 +283,37 @@ class ifstream
     : private detail::strict_fstream_holder< strict_fstream::ifstream >,
       public std::istream
 {
+private:
+    std::string filename;
+    std::ios_base::openmode mode;
 public:
     ifstream() : std::istream(new istreambuf(_fs.rdbuf())) {}
     explicit ifstream(const std::string& filename, std::ios_base::openmode mode = std::ios_base::in)
         : detail::strict_fstream_holder< strict_fstream::ifstream >(filename, mode),
-	std::istream(new istreambuf(_fs.rdbuf()))
+	std::istream(new istreambuf(_fs.rdbuf())),
+	filename(filename),
+	mode(mode)
     {
         this->setstate(_fs.rdstate());
         exceptions(std::ios_base::badbit);
     }
+    ifstream(const ifstream& other) : ifstream(other.get_file(), other.get_mode()) {}
     virtual ~ifstream()
     {
         if (rdbuf()) delete rdbuf();
     }
+    const std::string& get_file() const { return this->filename; }
+    const std::ios_base::openmode& get_mode() const { return this->mode; }    
 }; // class ifstream
 
 class ofstream
     : private detail::strict_fstream_holder< strict_fstream::ofstream >,
       public std::ostream
 {
+private:
+    std::string filename;
+    std::ios_base::openmode mode;
+    Compression type;
 public:
     explicit ofstream(const std::string& filename, std::ios_base::openmode mode = std::ios_base::out, Compression type = z)
         : detail::strict_fstream_holder< strict_fstream::ofstream >(filename, mode | std::ios_base::binary),
@@ -311,10 +323,17 @@ public:
     }
     explicit ofstream(const std::string& filename, Compression type)
 	: ofstream(filename, std::ios_base::out, type) {}
+    ofstream(const ofstream& other)
+	: ofstream(other.get_file(),
+		   other.get_mode(),
+		   other.get_type()) {}
     virtual ~ofstream()
     {
         if (rdbuf()) delete rdbuf();
     }
+    const std::string& get_file() const { return this->filename; }
+    const std::ios_base::openmode& get_mode() const { return this->mode; }    
+    const Compression& get_type() const { return this->type; }
 }; // class ofstream
 } // namespace bxz
 
