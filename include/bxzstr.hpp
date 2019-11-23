@@ -81,9 +81,7 @@ class istreambuf : public std::streambuf {
                     out_buff_free_start = reinterpret_cast< decltype(out_buff_free_start) >(strm_p->next_out());
                     assert(out_buff_free_start + strm_p->avail_out() == out_buff + buff_size);
                     // if stream ended, deallocate inflator
-                    if (strm_p->stream_end()) {
-			strm_p.reset();
-                 }
+                    if (strm_p->stream_end()) strm_p.reset();
                 }
             } while (out_buff_free_start == out_buff);
             // 2 exit conditions:
@@ -112,16 +110,17 @@ class istreambuf : public std::streambuf {
 
 class ostreambuf : public std::streambuf {
   public:
-    ostreambuf(std::streambuf * _sbuf_p, Compression type,
-               std::size_t _buff_size = default_buff_size, int _level = 2)
+    ostreambuf(std::streambuf * _sbuf_p, Compression type, int _level = 6,
+               std::size_t _buff_size = default_buff_size)
             : sbuf_p(_sbuf_p),
               buff_size(_buff_size),
-              type(type) {
+              type(type),
+              level(_level) {
         assert(sbuf_p);
         in_buff = new char [buff_size];
         out_buff = new char [buff_size];
         setp(in_buff, in_buff + buff_size);
-	init_stream(this->type, false, &strm_p);
+	init_stream(this->type, false, this->level, &strm_p);
     }
     ostreambuf(const ostreambuf &) = delete;
     ostreambuf(ostreambuf &&) = default;
@@ -178,7 +177,7 @@ class ostreambuf : public std::streambuf {
         strm_p->set_next_in(nullptr);
         strm_p->set_avail_in(0);
         if (deflate_loop(bxz_finish(this->type)) != 0) return -1;
-	init_stream(this->type, false, &strm_p);
+	init_stream(this->type, false, this->level, &strm_p);
         return 0;
     }
 
@@ -189,6 +188,7 @@ class ostreambuf : public std::streambuf {
     std::unique_ptr<detail::stream_wrapper> strm_p;
     std::size_t buff_size;
     Compression type;
+    int level;
 
     static const std::size_t default_buff_size = (std::size_t)1 << 20;
 }; // class ostreambuf
@@ -206,12 +206,12 @@ class istream : public std::istream {
 
 class ostream : public std::ostream {
   public:
-    ostream(std::ostream & os, Compression type = plaintext)
-	: std::ostream(new ostreambuf(os.rdbuf(), type)) {
+    ostream(std::ostream & os, Compression type = plaintext, int level = 6)
+	    : std::ostream(new ostreambuf(os.rdbuf(), type, level)) {
 	exceptions(std::ios_base::badbit);
     }
-    explicit ostream(std::streambuf * sbuf_p, Compression type = z)
-	    : std::ostream(new ostreambuf(sbuf_p, type)) {
+    explicit ostream(std::streambuf * sbuf_p, Compression type = z, int level = 6)
+	    : std::ostream(new ostreambuf(sbuf_p, type, level)) {
 	exceptions(std::ios_base::badbit);
     }
     virtual ~ostream() {
@@ -258,25 +258,31 @@ class ofstream : private detail::strict_fstream_holder< strict_fstream::ofstream
   public:
     explicit ofstream(const std::string& filename,
 		      std::ios_base::openmode mode = std::ios_base::out,
-		      Compression type = z)
+		      Compression type = z, int level = 6)
             : detail::strict_fstream_holder< strict_fstream::ofstream >(filename, mode | std::ios_base::binary),
-            std::ostream(new ostreambuf(_fs.rdbuf(), type)) {
+            std::ostream(new ostreambuf(_fs.rdbuf(), type, level)),
+            filename(filename),
+            mode(mode),
+            level(level) {
         exceptions(std::ios_base::badbit);
     }
-    explicit ofstream(const std::string& filename, Compression type)
-	    : ofstream(filename, std::ios_base::out, type) {}
+    explicit ofstream(const std::string& filename, Compression type, int level = 6)
+              : ofstream(filename, std::ios_base::out, type, level) {}
     ofstream(const ofstream& other)
             : ofstream(other.get_file(),
 	    other.get_mode(),
-	    other.get_type()) {}
+            other.get_type(),
+	    other.get_level()) {}
     virtual ~ofstream() { if (rdbuf()) delete rdbuf(); }
     const std::string& get_file() const { return this->filename; }
     const std::ios_base::openmode& get_mode() const { return this->mode; }    
     const Compression& get_type() const { return this->type; }
+    const int get_level() const { return this->level; }
   private:
     std::string filename;
     std::ios_base::openmode mode;
     Compression type;
+    int level;
 }; // class ofstream
 } // namespace bxz
 

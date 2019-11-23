@@ -43,8 +43,16 @@ bxz::ostream(std::cin, bxz::bz2);
 bxz::ostreambuf(std::cin.rdbuf(), bxz::lzma);
 ```
 
-If the stream objects fail at any point, `failbit` exception mask
-will be turned on.
+It's also possible to specify the compression level (1-9) as the third
+parameter (default level is 6):
+```
+bxz::ofstream("filename", bxz::z, 1);
+bxz::ostream(std::cin, bxz::bz2, 5);
+bxz::ostreambuf(std::cin.rdbuf(), bxz::lzma, 9);
+```
+
+If the stream objects fail at any point, `failbit` exception mask will
+be turned on.
 
 ## Requirements and dependencies
 * Compiler with c++11 support
