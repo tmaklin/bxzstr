@@ -41,7 +41,6 @@ class istreambuf : public std::streambuf {
     virtual ~istreambuf() {
         delete [] in_buff;
         delete [] out_buff;
-        if (strm_p) delete strm_p;
     }
 
     virtual std::streambuf::int_type underflow() {
@@ -83,9 +82,8 @@ class istreambuf : public std::streambuf {
                     assert(out_buff_free_start + strm_p->avail_out() == out_buff + buff_size);
                     // if stream ended, deallocate inflator
                     if (strm_p->stream_end()) {
-                        delete strm_p;
-                        strm_p = nullptr;
-                    }
+			strm_p.reset();
+                 }
                 }
             } while (out_buff_free_start == out_buff);
             // 2 exit conditions:
@@ -102,7 +100,7 @@ class istreambuf : public std::streambuf {
     char* in_buff_start;
     char* in_buff_end;
     char* out_buff;
-    detail::stream_wrapper* strm_p;
+    std::unique_ptr<detail::stream_wrapper> strm_p;
     std::size_t buff_size;
     bool auto_detect;
     bool auto_detect_run;
@@ -158,7 +156,6 @@ class ostreambuf : public std::streambuf {
         sync();
         delete [] in_buff;
         delete [] out_buff;
-        delete strm_p;
     }
     virtual std::streambuf::int_type overflow(std::streambuf::int_type c = traits_type::eof()) {
         strm_p->set_next_in(reinterpret_cast< decltype(strm_p->next_in()) >(pbase()));
@@ -181,7 +178,6 @@ class ostreambuf : public std::streambuf {
         strm_p->set_next_in(nullptr);
         strm_p->set_avail_in(0);
         if (deflate_loop(bxz_finish(this->type)) != 0) return -1;
-	delete strm_p;
 	init_stream(this->type, false, &strm_p);
         return 0;
     }
@@ -190,7 +186,7 @@ class ostreambuf : public std::streambuf {
     std::streambuf* sbuf_p;
     char* in_buff;
     char* out_buff;
-    detail::stream_wrapper* strm_p;
+    std::unique_ptr<detail::stream_wrapper> strm_p;
     std::size_t buff_size;
     Compression type;
 

@@ -58,6 +58,26 @@ inline void init_stream(const Compression &type, const bool is_input,
 	default : throw std::runtime_error("Unrecognized compression type.");
     }
 }
+
+inline void init_stream(const Compression &type, const bool is_input,
+			std::unique_ptr<detail::stream_wrapper> *strm_p) {
+    switch (type) {
+#ifdef BXZSTR_LZMA_STREAM_WRAPPER_HPP
+    case lzma : strm_p->reset(new detail::lzma_stream_wrapper(is_input));
+	break;
+#endif
+#ifdef BXZSTR_BZ_STREAM_WRAPPER_HPP
+    case bz2 : strm_p->reset(new detail::bz_stream_wrapper(is_input));
+	break;
+#endif
+#ifdef BXZSTR_Z_STREAM_WRAPPER_HPP
+    case z : strm_p->reset(new detail::z_stream_wrapper(is_input));
+	break;
+#endif
+	default : throw std::runtime_error("Unrecognized compression type.");
+    }
+}
+
 inline int bxz_run(const Compression &type) {
     switch(type){
 #ifdef BXZSTR_LZMA_STREAM_WRAPPER_HPP
