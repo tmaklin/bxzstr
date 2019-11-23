@@ -227,6 +227,13 @@ struct strict_fstream_holder {
 			  std::ios_base::openmode mode = std::ios_base::in)
             : _fs(filename, mode) {}
     FStream_Type _fs;
+    void open(const std::string& filename,
+	      const std::ios_base::openmode mode = std::ios_base::in) {
+	_fs.open(filename, mode);
+    }
+    void close() {
+	_fs.close();
+    }
 }; // class strict_fstream_holder
 
 } // namespace detail
@@ -246,8 +253,17 @@ class ifstream : private detail::strict_fstream_holder< strict_fstream::ifstream
     }
     ifstream(const ifstream& other) : ifstream(other.get_file(), other.get_mode()) {}
     virtual ~ifstream() { if (rdbuf()) delete rdbuf(); }
+
+    void open(const std::string &filename,
+	      const std::ios_base::openmode mode = std::ios_base::in) {
+	detail::strict_fstream_holder< strict_fstream::ifstream>::open(filename, mode);
+    }
+    void close() {
+	detail::strict_fstream_holder< strict_fstream::ifstream>::close();
+    }
+
     const std::string& get_file() const { return this->filename; }
-    const std::ios_base::openmode& get_mode() const { return this->mode; }    
+    const std::ios_base::openmode& get_mode() const { return this->mode; }
   private:
     std::string filename;
     std::ios_base::openmode mode;
@@ -274,6 +290,15 @@ class ofstream : private detail::strict_fstream_holder< strict_fstream::ofstream
             other.get_type(),
 	    other.get_level()) {}
     virtual ~ofstream() { if (rdbuf()) delete rdbuf(); }
+
+    void open(const std::string &filename,
+	      const std::ios_base::openmode mode = std::ios_base::in) {
+	detail::strict_fstream_holder< strict_fstream::ofstream>::open(filename, mode);
+    }
+    void close() {
+	detail::strict_fstream_holder< strict_fstream::ofstream>::close();
+    }
+
     const std::string& get_file() const { return this->filename; }
     const std::ios_base::openmode& get_mode() const { return this->mode; }    
     const Compression& get_type() const { return this->type; }
