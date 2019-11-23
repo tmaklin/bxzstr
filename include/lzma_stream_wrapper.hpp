@@ -69,7 +69,7 @@ namespace detail {
 class lzma_stream_wrapper : public lzma_stream, public stream_wrapper {
   public:
     lzma_stream_wrapper(const bool _is_input = true, const int _level = 2, const int _flags = 0)
-	    : is_input(_is_input), lzma_stream(LZMA_STREAM_INIT) {
+	    : lzma_stream(LZMA_STREAM_INIT), is_input(_is_input) {
 	lzma_ret ret;
 	if (is_input) {
 	    lzma_stream::avail_in = 0;
@@ -82,7 +82,7 @@ class lzma_stream_wrapper : public lzma_stream, public stream_wrapper {
     }
     ~lzma_stream_wrapper() { lzma_end(this); }
 
-    int decompress(const int _flags = 0) override {
+    int decompress(const int) override {
 	ret = lzma_code(this, LZMA_RUN);
 	if (ret != LZMA_OK && ret != LZMA_STREAM_END && ret) throw lzmaException(ret);
 	return (int)ret;

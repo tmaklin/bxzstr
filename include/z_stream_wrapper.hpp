@@ -57,7 +57,7 @@ namespace detail {
 class z_stream_wrapper : public z_stream, public stream_wrapper {
   public:
     z_stream_wrapper(const bool _is_input = true,
-		     const int _level = Z_DEFAULT_COMPRESSION, const int _flags = 0)
+		     const int _level = Z_DEFAULT_COMPRESSION, const int = 0)
 	    : is_input(_is_input) {
 	z_stream::next_in = new uint8_t();
 	z_stream::next_out = new uint8_t();

@@ -25,8 +25,7 @@ class istreambuf : public std::streambuf {
 	      strm_p(nullptr),
 	      buff_size(_buff_size),
 	      auto_detect(_auto_detect),
-	      auto_detect_run(false),
-	      is_text(false) {
+	      auto_detect_run(false) {
         assert(sbuf_p);
         in_buff = new char [buff_size];
         in_buff_start = in_buff;
@@ -102,7 +101,6 @@ class istreambuf : public std::streambuf {
     std::size_t buff_size;
     bool auto_detect;
     bool auto_detect_run;
-    bool is_text;
     Compression type;
 
     static const std::size_t default_buff_size = (std::size_t)1 << 20;
