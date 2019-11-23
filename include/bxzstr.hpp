@@ -251,7 +251,7 @@ class ifstream : private detail::strict_fstream_holder< strict_fstream::ifstream
         this->setstate(_fs.rdstate());
         exceptions(std::ios_base::badbit);
     }
-    ifstream(const ifstream& other) : ifstream(other.get_file(), other.get_mode()) {}
+    ifstream(const ifstream& other) : ifstream(other.filename, other.mode) {}
     virtual ~ifstream() { if (rdbuf()) delete rdbuf(); }
 
     void open(const std::string &filename,
@@ -262,8 +262,6 @@ class ifstream : private detail::strict_fstream_holder< strict_fstream::ifstream
 	detail::strict_fstream_holder< strict_fstream::ifstream>::close();
     }
 
-    const std::string& get_file() const { return this->filename; }
-    const std::ios_base::openmode& get_mode() const { return this->mode; }
   private:
     std::string filename;
     std::ios_base::openmode mode;
@@ -285,10 +283,10 @@ class ofstream : private detail::strict_fstream_holder< strict_fstream::ofstream
     explicit ofstream(const std::string& filename, Compression type, int level = 6)
               : ofstream(filename, std::ios_base::out, type, level) {}
     ofstream(const ofstream& other)
-            : ofstream(other.get_file(),
-	    other.get_mode(),
-            other.get_type(),
-	    other.get_level()) {}
+            : ofstream(other.filename,
+	    other.mode,
+            other.type,
+	    other.level) {}
     virtual ~ofstream() { if (rdbuf()) delete rdbuf(); }
 
     void open(const std::string &filename,
@@ -299,10 +297,6 @@ class ofstream : private detail::strict_fstream_holder< strict_fstream::ofstream
 	detail::strict_fstream_holder< strict_fstream::ofstream>::close();
     }
 
-    const std::string& get_file() const { return this->filename; }
-    const std::ios_base::openmode& get_mode() const { return this->mode; }    
-    const Compression& get_type() const { return this->type; }
-    const int get_level() const { return this->level; }
   private:
     std::string filename;
     std::ios_base::openmode mode;
