@@ -227,13 +227,6 @@ struct strict_fstream_holder {
 			  std::ios_base::openmode mode = std::ios_base::in)
             : _fs(filename, mode) {}
     FStream_Type _fs;
-    void open(const std::string& filename,
-	      const std::ios_base::openmode mode = std::ios_base::in) {
-	_fs.open(filename, mode);
-    }
-    void close() {
-	_fs.close();
-    }
 }; // class strict_fstream_holder
 
 } // namespace detail
@@ -255,12 +248,15 @@ class ifstream : private detail::strict_fstream_holder< strict_fstream::ifstream
     virtual ~ifstream() { if (rdbuf()) delete rdbuf(); }
 
     void open(const std::string &filename,
-	      const std::ios_base::openmode mode = std::ios_base::in) {
-	detail::strict_fstream_holder< strict_fstream::ifstream>::open(filename, mode);
+	      std::ios_base::openmode mode = std::ios_base::in) {
+	_fs.open(filename, mode);
     }
-    void close() {
-	detail::strict_fstream_holder< strict_fstream::ifstream>::close();
+    void open(const char* filename,
+	      std::ios_base::openmode mode = std::ios_base::in) {
+	_fs.open(filename, mode);
     }
+    bool is_open() const { return _fs.is_open(); }
+    void close() { _fs.close(); }
 
   private:
     std::string filename;
@@ -290,17 +286,15 @@ class ofstream : private detail::strict_fstream_holder< strict_fstream::ofstream
     virtual ~ofstream() { if (rdbuf()) delete rdbuf(); }
 
     void open(const std::string &filename,
-	      const std::ios_base::openmode mode = std::ios_base::in) {
-	if (detail::strict_fstream_holder< strict_fstream::ofstream>::is_open()) {
-	    detail::strict_fstream_holder< strict_fstream::ofstream>::close();
-	}
-	detail::strict_fstream_holder< strict_fstream::ofstream>::open(filename, mode);
+	      std::ios_base::openmode mode = std::ios_base::in) {
+	_fs.open(filename, mode);
     }
-    void close() {
-	if (detail::strict_fstream_holder< strict_fstream::ofstream>::is_open()) {
-	    detail::strict_fstream_holder< strict_fstream::ofstream>::close();
-	}
+    void open(const char* filename,
+	      std::ios_base::openmode mode = std::ios_base::in) {
+	_fs.open(filename, mode);
     }
+    bool is_open() const { return _fs.is_open(); }
+    void close() { _fs.close(); }
 
   private:
     std::string filename;
