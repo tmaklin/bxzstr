@@ -289,10 +289,15 @@ class ofstream : private detail::strict_fstream_holder< strict_fstream::ofstream
 
     void open(const std::string &filename,
 	      const std::ios_base::openmode mode = std::ios_base::in) {
+	if (detail::strict_fstream_holder< strict_fstream::ofstream>::is_open()) {
+	    detail::strict_fstream_holder< strict_fstream::ofstream>::close();
+	}
 	detail::strict_fstream_holder< strict_fstream::ofstream>::open(filename, mode);
     }
     void close() {
-	detail::strict_fstream_holder< strict_fstream::ofstream>::close();
+	if (detail::strict_fstream_holder< strict_fstream::ofstream>::is_open()) {
+	    detail::strict_fstream_holder< strict_fstream::ofstream>::close();
+	}
     }
 
   private:
