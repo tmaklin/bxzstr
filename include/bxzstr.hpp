@@ -56,8 +56,10 @@ class istreambuf : public std::streambuf {
                     if (in_buff_end == in_buff_start) break; // end of input
                 }
                 // auto detect if the stream contains text or deflate data
-                if (auto_detect && ! auto_detect_run)
+                if (auto_detect && ! auto_detect_run) {
 		    this->type = detect_type(in_buff_start, in_buff_end);
+		    this->auto_detect_run = true;
+		}
                 if (this->type == plaintext) {
                     // simply swap in_buff and out_buff, and adjust pointers
                     assert(in_buff_start == in_buff);
