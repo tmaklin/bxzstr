@@ -221,17 +221,31 @@ class ostream : public std::ostream {
 
 namespace detail {
 template < typename FStream_Type >
-struct strict_fstream_holder {
+class strict_fstream_holder {
+  public:
     strict_fstream_holder() {};
     strict_fstream_holder(const std::string& filename,
 			  std::ios_base::openmode mode = std::ios_base::in)
             : _fs(filename, mode) {}
+
+    void open(const std::string &filename,
+	      std::ios_base::openmode mode = std::ios_base::in) {
+	_fs.open(filename, mode);
+    }
+    void open(const char* filename,
+	      std::ios_base::openmode mode = std::ios_base::in) {
+	_fs.open(filename, mode);
+    }
+    bool is_open() const { return _fs.is_open(); }
+    void close() { _fs.close(); }
+
+  protected:
     FStream_Type _fs;
 }; // class strict_fstream_holder
 
 } // namespace detail
 
-class ifstream : private detail::strict_fstream_holder< strict_fstream::ifstream >,
+class ifstream : public detail::strict_fstream_holder< strict_fstream::ifstream >,
 		 public std::istream {
   public:
     ifstream() : std::istream(new istreambuf(_fs.rdbuf())) {}
@@ -247,23 +261,12 @@ class ifstream : private detail::strict_fstream_holder< strict_fstream::ifstream
     ifstream(const ifstream& other) : ifstream(other.filename, other.mode) {}
     virtual ~ifstream() { if (rdbuf()) delete rdbuf(); }
 
-    void open(const std::string &filename,
-	      std::ios_base::openmode mode = std::ios_base::in) {
-	_fs.open(filename, mode);
-    }
-    void open(const char* filename,
-	      std::ios_base::openmode mode = std::ios_base::in) {
-	_fs.open(filename, mode);
-    }
-    bool is_open() const { return _fs.is_open(); }
-    void close() { _fs.close(); }
-
   private:
     std::string filename;
     std::ios_base::openmode mode;
 }; // class ifstream
 
-class ofstream : private detail::strict_fstream_holder< strict_fstream::ofstream >,
+class ofstream : public detail::strict_fstream_holder< strict_fstream::ofstream >,
 		 public std::ostream {
   public:
     explicit ofstream(const std::string& filename,
@@ -284,17 +287,6 @@ class ofstream : private detail::strict_fstream_holder< strict_fstream::ofstream
             other.type,
 	    other.level) {}
     virtual ~ofstream() { if (rdbuf()) delete rdbuf(); }
-
-    void open(const std::string &filename,
-	      std::ios_base::openmode mode = std::ios_base::in) {
-	_fs.open(filename, mode);
-    }
-    void open(const char* filename,
-	      std::ios_base::openmode mode = std::ios_base::in) {
-	_fs.open(filename, mode);
-    }
-    bool is_open() const { return _fs.is_open(); }
-    void close() { _fs.close(); }
 
   private:
     std::string filename;
