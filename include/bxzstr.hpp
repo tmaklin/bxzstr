@@ -11,6 +11,7 @@
 #define BXZSTR_BXZSTR_HPP
 
 #include <fstream>
+#include <memory>
 
 #include "stream_wrapper.hpp"
 #include "strict_fstream.hpp"
