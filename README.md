@@ -78,7 +78,7 @@ cmake .
 ```
 in the root directory. CMake will modify `config.hpp` to match the
 libraries supported on the system. If the
-(find_package)[https://cmake.org/cmake/help/v3.0/command/find_package.html]
+[find_package](https://cmake.org/cmake/help/v3.0/command/find_package.html)
 command has already been run in CMake, automatic configuration will
 respect the results instead of running find_package again.
 
