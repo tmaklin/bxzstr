@@ -54,27 +54,38 @@ bxz::ostreambuf(std::cin.rdbuf(), bxz::lzma, 9);
 If the stream objects fail at any point, `failbit` exception mask will
 be turned on.
 
+## Configuration
+You can use the library without one of libz, libbz2, or liblzma by
+modifying the `config.hpp` file. For example, to disable lzma support,
+set BXZSTR_LZMA_SUPPORT to 0:
+```
+#ifndef BXZSTR_CONFIG_HPP
+#define BXZSTR_CONFIG_HPP
+
+#define BXZSTR_Z_SUPPORT 1
+#define BXZSTR_BZ2_SUPPORT 1
+#define BXZSTR_LZMA_SUPPORT 0
+
+#endif
+```
+The rest of the project will adapt accordingly.
+
+## Automatic configuration
+It is also possible to configure the header automatically with CMake,
+e. g. as part of a larger project, by running
+```
+cmake .
+```
+in the root directory. CMake will modify `config.hpp` to match the
+libraries supported on the system. If the
+(find_package)[https://cmake.org/cmake/help/v3.0/command/find_package.html]
+command has already been run in CMake, automatic configuration will
+respect the results instead of running find_package again.
+
 ## Requirements and dependencies
 * Compiler with c++11 support
-* libz, libbz2, and liblzma
-
-You can use the library without one of libz, libbz2, or liblzma by
-commenting out the the releant include in `compression_types.hpp`. For
-example, to disable lzma support, comment out lzma_stream_wrapper.hpp
-as follows:
-```
-#ifndef BXZSTR_COMPRESSION_TYPES_HPP
-#define BXZSTR_COMPRESSION_TYPES_HPP
-
-#include <exception>
-
-#include "stream_wrapper.hpp"
-#include "bz_stream_wrapper.hpp"
-// #include "lzma_stream_wrapper.hpp"
-#include "z_stream_wrapper.hpp"
-
-```
-The rest of the header will configure itself accordingly.
+* libz, libbz2, and/or liblzma
+* CMake v3.0 or greater (for automatic config)
 
 ## License
 The source code from this project is subject to the terms of the

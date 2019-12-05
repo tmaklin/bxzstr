@@ -7,6 +7,8 @@
  * file from the zstr project (https://github.com/mateidavid/zstr)
  * written by Matei David (https://github.com/mateidavid). */
 
+#include "config.hpp"
+
 #ifndef BXZSTR_BXZSTR_HPP
 #define BXZSTR_BXZSTR_HPP
 

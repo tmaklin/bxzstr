@@ -5,6 +5,8 @@
  * This file is a part of bxzstr (https://github.com/tmaklin/bxzstr)
  * Written by Tommi Mäklin (tommi@maklin.fi) */
 
+#if defined(BXZSTR_BZ2_SUPPORT) && (BXZSTR_BZ2_SUPPORT) == 1
+
 #ifndef BXZSTR_BZ_STREAM_WRAPPER_HPP
 #define BXZSTR_BZ_STREAM_WRAPPER_HPP
 
@@ -122,4 +124,5 @@ class bz_stream_wrapper : public bz_stream, public stream_wrapper {
 } // namespace detail
 } // namespace bxz
 
+#endif
 #endif
