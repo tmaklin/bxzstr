@@ -46,4 +46,4 @@ else()
   endif()
 endif()
 
-configure_file(include/config.hpp.in include/config.hpp @ONLY)
+configure_file(include/config.hpp.in ${CMAKE_CURRENT_SOURCE_DIR}/include/config.hpp @ONLY)
