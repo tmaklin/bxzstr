@@ -61,8 +61,6 @@ class z_stream_wrapper : public z_stream, public stream_wrapper {
     z_stream_wrapper(const bool _is_input = true,
 		     const int _level = Z_DEFAULT_COMPRESSION, const int = 0)
 	    : is_input(_is_input) {
-	z_stream::next_in = new uint8_t();
-	z_stream::next_out = new uint8_t();
 	this->zalloc = Z_NULL;
 	this->zfree = Z_NULL;
 	this->opaque = Z_NULL;
