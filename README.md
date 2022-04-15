@@ -1,7 +1,8 @@
-# bxzstr — A C++11 ZLib / libBZ2 / libLZMA wrapper
+# bxzstr — A C++11 ZLib / libBZ2 / libLZMA / zstd
 
 Header-only library for using standard c++ iostreams to access streams
-compressed with ZLib, libBZ2, or liblzma (.gz, .bz2, and .xz files).
+compressed with ZLib, libBZ2, liblzma, or zstd (.gz, .bz2, .xz, and
+.zst files).
 
 For decompression, the format is automatically detected. For
 compression, the only parameter exposed is the compression algorithm.
@@ -19,8 +20,9 @@ identifying the headers based on the magic numbers:
 * ZLib header, starting with **78 01**, **78 9c**, and **78 DA**
 * BZ2 header, starting with **42 5a 68**
 * LZMA header, starting with **FD 37 7A 58 5A 00**
+* ZSTD header, starting with b0 **FD 2F B5 28**
 
-when no header is identified, the strema is treated as plain text (uncompressed).
+when no header is identified, the stream is treated as plain text (uncompressed).
 
 ## Usage
 The streams can be accessed through 6 classes that function similarly
@@ -65,6 +67,7 @@ set BXZSTR_LZMA_SUPPORT to 0:
 #define BXZSTR_Z_SUPPORT 1
 #define BXZSTR_BZ2_SUPPORT 1
 #define BXZSTR_LZMA_SUPPORT 0
+#define BXZSTR_ZSTD_SUPPORT 0
 
 #endif
 ```
@@ -84,8 +87,13 @@ respect the results instead of running find_package again.
 
 ## Requirements and dependencies
 * Compiler with c++11 support
-* libz, libbz2, and/or liblzma
 * CMake v3.0 or greater (for automatic config)
+* libz, libbz2, liblzma, and/or libzstd ** Using libzstd requires
+compiling and linking against the
+[zstd_zlibwrapper](https://github.com/facebook/zstd/tree/dev/zlibWrapper)
+library which is not a part of the standard zstd distribution. Because
+of this, zstd support is *not* configured automatically and has to be
+explicitly enabled by the user.
 
 ## License
 The source code from this project is subject to the terms of the
