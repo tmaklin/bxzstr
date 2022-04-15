@@ -1,4 +1,4 @@
-# bxzstr — A C++11 ZLib / libBZ2 / libLZMA / zstd
+# bxzstr — A C++11 ZLib / libBZ2 / libLZMA / zstd wrapper
 
 Header-only library for using standard c++ iostreams to access streams
 compressed with ZLib, libBZ2, liblzma, or zstd (.gz, .bz2, .xz, and
