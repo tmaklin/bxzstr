@@ -88,12 +88,7 @@ respect the results instead of running find_package again.
 ## Requirements and dependencies
 * Compiler with c++11 support
 * CMake v3.0 or greater (for automatic config)
-* libz, libbz2, liblzma, and/or libzstd ** Using libzstd requires
-compiling and linking against the
-[zstd_zlibwrapper](https://github.com/facebook/zstd/tree/dev/zlibWrapper)
-library which is not a part of the standard zstd distribution. Because
-of this, zstd support is *not* configured automatically and has to be
-explicitly enabled by the user.
+* libz, libbz2, liblzma, and/or libzstd
 
 ## License
 The source code from this project is subject to the terms of the
