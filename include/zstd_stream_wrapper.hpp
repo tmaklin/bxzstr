@@ -10,15 +10,13 @@
 #ifndef BXZSTR_ZSTD_STREAM_WRAPPER_HPP
 #define BXZSTR_ZSTD_STREAM_WRAPPER_HPP
 
-#include <zlib.h>
+#include <zstd.h>
 
 #include <string>
 #include <sstream>
 #include <exception>
 
 #include "stream_wrapper.hpp"
-
-#include "zstd_zlibwrapper.h"
 
 namespace bxz {
 /// Exception class thrown by failed zlib operations.
@@ -58,58 +56,69 @@ public:
 }; // class zException
 
 namespace detail {
-class zstd_stream_wrapper : public z_stream, public stream_wrapper {
+class zstd_stream_wrapper : public stream_wrapper {
   public:
     zstd_stream_wrapper(const bool _is_input = true,
 		     const int _level = Z_DEFAULT_COMPRESSION, const int = 0)
 	    : is_input(_is_input) {
-	this->zalloc = Z_NULL;
-	this->zfree = Z_NULL;
-	this->opaque = Z_NULL;
 	if (is_input) {
-	    z_stream::avail_in = 0;
-	    z_stream::next_in = Z_NULL;
-	    ret = inflateInit2(this, 15+32);
+	    this->dctx = ZSTD_createDCtx(); // TODO: Check that dctx != NULL
 	} else {
-	    ret = deflateInit2(this, _level, Z_DEFLATED, 15+16, 8, Z_DEFAULT_STRATEGY);
+	    //ret = deflateInit2(this, _level, Z_DEFLATED, 15+16, 8, Z_DEFAULT_STRATEGY);
 	}
-	if (ret != Z_OK) throw zException(this, ret);
+	//if (ret != Z_OK) throw zException(this, ret);
     }
     ~zstd_stream_wrapper() {
 	if (is_input) {
-	    inflateEnd(this);
+	    ZSTD_freeDCtx(this->dctx);
 	} else {
-	    deflateEnd(this);
+	    //deflateEnd(this);
 	}
     }
 
     int decompress(const int _flags = Z_NO_FLUSH) override {
-	ret = inflate(this, _flags);
-	if (ret != Z_OK && ret != Z_STREAM_END) throw zException(this, ret);
+	ZSTD_inBuffer input = { this->buffIn, this->buffInSize, 0 };
+	ZSTD_outBuffer output = { this->buffOut, this->buffOutSize, 0 };
+	this->ret = ZSTD_decompressStream(this->dctx, &output, &input); // TODO: check_zstd(ret)
+
+	// Update internal state
+	this->set_next_out(this->next_out() + output.pos);
+	this->set_avail_out(this->avail_out() - output.pos);
+	this->set_next_in(this->next_in() + input.pos);
+	this->set_avail_in(this->avail_in() - input.pos);
+
 	return ret;
     }
     int compress(const int _flags = Z_NO_FLUSH) override {
-	ret = deflate(this, _flags);
-	if (ret != Z_OK && ret != Z_STREAM_END && ret != Z_BUF_ERROR)
-	    throw zException(this, ret);
-	return ret;
+	return 0;
+	// ret = deflate(this, _flags);
+	// if (ret != Z_OK && ret != Z_STREAM_END && ret != Z_BUF_ERROR)
+	//     throw zException(this, ret);
+	// return ret;
     }
-    bool stream_end() const override { return this->ret == Z_STREAM_END; }
-    bool done() const override { return (this->ret == Z_BUF_ERROR || this->stream_end()); }
+    bool stream_end() const override { return this->ret == 0; }
+    bool done() const override { return this->stream_end(); }
 
-    const uint8_t* next_in() const override { return z_stream::next_in; }
-    long avail_in() const override { return z_stream::avail_in; }
-    uint8_t* next_out() const override { return z_stream::next_out; }
-    long avail_out() const override { return z_stream::avail_out; }
+    const uint8_t* next_in() const override { return static_cast<unsigned char*>(this->buffIn); }
+    long avail_in() const override { return this->buffInSize; }
+    uint8_t* next_out() const override { return static_cast<unsigned char*>(this->buffOut); }
+    long avail_out() const override { return this->buffOutSize; }
 
-    void set_next_in(const unsigned char* in) override { z_stream::next_in = (unsigned char*)in; }
-    void set_avail_in(long in) override { z_stream::avail_in = in; }
-    void set_next_out(const uint8_t* in) override { z_stream::next_out = const_cast<Bytef*>(in); }
-    void set_avail_out(long in) override { z_stream::avail_out = in; }
+    void set_next_in(const unsigned char* in) override { this->buffIn = (void*)in; }
+    void set_avail_in(long in) override { this->buffInSize = in; }
+    void set_next_out(const uint8_t* in) override { this->buffOut = (void*)in; }
+    void set_avail_out(long in) override { this->buffOutSize = in; }
 
   private:
     bool is_input;
     int ret;
+
+    ZSTD_DCtx* dctx;
+
+    size_t buffInSize;
+    void* buffIn;
+    size_t buffOutSize;;
+    void* buffOut;
 }; // class zstd_stream_wrapper
 } // namespace detail
 } // namespace bxz
