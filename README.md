@@ -1,7 +1,7 @@
-# bxzstr — A C++11 ZLib / libBZ2 / libLZMA / zstd wrapper
+# bxzstr — A C++11 ZLib / libBZ2 / libLZMA / libZstd wrapper
 
 Header-only library for using standard c++ iostreams to access streams
-compressed with ZLib, libBZ2, liblzma, or zstd (.gz, .bz2, .xz, and
+compressed with ZLib, libBZ2, libLZMA, or libZstd (.gz, .bz2, .xz, and
 .zst files).
 
 For decompression, the format is automatically detected. For
@@ -20,7 +20,7 @@ identifying the headers based on the magic numbers:
 * ZLib header, starting with **78 01**, **78 9c**, and **78 DA**
 * BZ2 header, starting with **42 5a 68**
 * LZMA header, starting with **FD 37 7A 58 5A 00**
-* ZSTD header, starting with b0 **FD 2F B5 28**
+* ZSTD header, starting with **28 B5 2F FD**
 
 when no header is identified, the stream is treated as plain text (uncompressed).
 
