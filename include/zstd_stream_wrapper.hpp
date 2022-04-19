@@ -21,39 +21,42 @@
 namespace bxz {
 /// Exception class thrown by failed zstd operations.
 class zstdException : public std::exception {
-public:
-    zstdException(const size_t err) : _msg("zstd error: ") {
+  public:
+    zstdException(const size_t err) : msg("zstd error: ") {
 	std::ostringstream oss;
 	oss << err;
-	_msg += "[" + oss.str() + "]: ";
-        _msg += ZSTD_getErrorName(err);
+	this->msg += "[" + oss.str() + "]: ";
+        this->msg += ZSTD_getErrorName(err);
     }
-    zstdException(const std::string msg) : _msg(msg) {}
+    zstdException(const std::string _msg) : msg(_msg) {}
 
-    const char * what() const noexcept { return _msg.c_str(); }
+    const char * what() const noexcept { return this->msg.c_str(); }
 
   private:
-    std::string _msg;
+    std::string msg;
+
 }; // class zstdException
 
 namespace detail {
 class zstd_stream_wrapper : public stream_wrapper {
   public:
-    zstd_stream_wrapper(const bool _is_input = true,
-			const int _level = ZSTD_defaultCLevel(), const int = 0)
-	    : is_input(_is_input) {
-	if (is_input) {
-	    this->dctx = ZSTD_createDCtx(); // TODO: size buffers
+    zstd_stream_wrapper(const bool _isInput = true,
+			const int level = ZSTD_defaultCLevel(), const int = 0)
+	    : isInput(_isInput) {
+	if (this->isInput) {
+	    this->dctx = ZSTD_createDCtx();
 	    if (this->dctx == NULL) throw zstdException("ZSTD_createDCtx() failed!");
 	} else {
-	    this->cctx = ZSTD_createCCtx(); // TODO: as above.
+	    this->cctx = ZSTD_createCCtx();
 	    if (this->cctx == NULL) throw zstdException("ZSTD_createCCtx() failed!");
-	    this->ret = ZSTD_CCtx_setParameter(cctx, ZSTD_c_compressionLevel, _level);
+	    this->ret = ZSTD_CCtx_setParameter(cctx, ZSTD_c_compressionLevel, level);
 	}
 	if (ZSTD_isError(this->ret)) throw zstdException(this->ret);
+
     }
+
     ~zstd_stream_wrapper() {
-	if (is_input) {
+	if (this->isInput) {
 	    ZSTD_freeDCtx(this->dctx);
 	} else {
 	    ZSTD_freeCCtx(this->cctx);
@@ -61,22 +64,21 @@ class zstd_stream_wrapper : public stream_wrapper {
     }
 
     int decompress(const int = 0) override {
-	ZSTD_inBuffer input = { this->buffIn, this->buffInSize, 0 };
-	ZSTD_outBuffer output = { this->buffOut, this->buffOutSize, 0 };
-	this->ret = ZSTD_decompressStream(this->dctx, &output, &input); // TODO: check_zstd(ret)
+	this->update_inbuffer();
+	this->update_outbuffer();
+
+	this->ret = ZSTD_decompressStream(this->dctx, &output, &input);
 	if (ZSTD_isError(this->ret)) throw zstdException(this->ret);
 
-	// Update internal state
-	this->set_next_out(this->next_out() + output.pos);
-	this->set_avail_out(this->avail_out() - output.pos);
-	this->set_next_in(this->next_in() + input.pos);
-	this->set_avail_in(this->avail_in() - input.pos);
+	this->update_stream_state();
 
 	return (int)ret;
     }
+
     int compress(const int endStream) override {
-	ZSTD_inBuffer input = { this->buffIn, this->buffInSize, 0 };
-	ZSTD_outBuffer output = { this->buffOut, this->buffOutSize, 0 };
+	this->update_inbuffer();
+	this->update_outbuffer();
+
 	if (endStream) {
 	    this->ret = ZSTD_endStream(this->cctx, &output);
 	    if (ZSTD_isError(this->ret)) throw zstdException(this->ret);
@@ -84,43 +86,51 @@ class zstd_stream_wrapper : public stream_wrapper {
 	    this->ret = ZSTD_compressStream2(this->cctx, &output, &input, ZSTD_e_continue);
 	    if (ZSTD_isError(this->ret)) throw zstdException(this->ret);
 
-	    // Update internal state
-	    this->set_next_in(this->next_in() + input.pos);
-	    this->set_avail_in(this->avail_in() - input.pos);
-
 	    this->ret = (input.pos == input.size);
 	}
 
-	// Update internal state
-	this->set_next_out(this->next_out() + output.pos);
-	this->set_avail_out(this->avail_out() - output.pos);
+	this->update_stream_state();
 
 	return (int)ret;
     }
+
     bool stream_end() const override { return this->ret == 0; }
     bool done() const override { return this->stream_end(); }
 
-    const uint8_t* next_in() const override { return static_cast<unsigned char*>(this->buffIn); }
+    const unsigned char* next_in() const override { return static_cast<unsigned char*>(this->buffIn); }
     long avail_in() const override { return this->buffInSize; }
-    uint8_t* next_out() const override { return static_cast<unsigned char*>(this->buffOut); }
+    unsigned char* next_out() const override { return static_cast<unsigned char*>(this->buffOut); }
     long avail_out() const override { return this->buffOutSize; }
 
     void set_next_in(const unsigned char* in) override { this->buffIn = (void*)in; }
-    void set_avail_in(long in) override { this->buffInSize = in; }
-    void set_next_out(const uint8_t* in) override { this->buffOut = (void*)in; }
-    void set_avail_out(long in) override { this->buffOutSize = in; }
+    void set_avail_in(long in) override { this->buffInSize = (size_t)in; }
+    void set_next_out(const unsigned char* in) override { this->buffOut = (void*)in; }
+    void set_avail_out(long in) override { this->buffOutSize = (size_t)in; }
 
   private:
-    bool is_input;
+    bool isInput;
     size_t ret;
-
-    ZSTD_DCtx* dctx;
-    ZSTD_CCtx* cctx;
 
     size_t buffInSize;
     void* buffIn;
     size_t buffOutSize;;
     void* buffOut;
+
+    ZSTD_DCtx* dctx;
+    ZSTD_CCtx* cctx;
+
+    ZSTD_inBuffer input;
+    ZSTD_outBuffer output;
+
+    void update_inbuffer() { this->input = { this->buffIn, this->buffInSize, 0 }; }
+    void update_outbuffer() { this->output =  { this->buffOut, this->buffOutSize, 0 }; }
+    void update_stream_state() {
+	this->set_next_out(this->next_out() + this->output.pos);
+	this->set_avail_out(this->avail_out() - this->output.pos);
+	this->set_next_in(this->next_in() + this->input.pos);
+	this->set_avail_in(this->avail_in() - this->input.pos);
+    }
+
 }; // class zstd_stream_wrapper
 } // namespace detail
 } // namespace bxz
