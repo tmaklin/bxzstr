@@ -40,7 +40,7 @@ namespace detail {
 class zstd_stream_wrapper : public stream_wrapper {
   public:
     zstd_stream_wrapper(const bool _is_input = true,
-		     const int _level = Z_DEFAULT_COMPRESSION, const int = 0)
+			const int _level = ZSTD_defaultCLevel(), const int = 0)
 	    : is_input(_is_input) {
 	if (is_input) {
 	    this->dctx = ZSTD_createDCtx(); // TODO: size buffers
@@ -60,7 +60,7 @@ class zstd_stream_wrapper : public stream_wrapper {
 	}
     }
 
-    int decompress(const int _flags = Z_NO_FLUSH) override {
+    int decompress(const int = 0) override {
 	ZSTD_inBuffer input = { this->buffIn, this->buffInSize, 0 };
 	ZSTD_outBuffer output = { this->buffOut, this->buffOutSize, 0 };
 	this->ret = ZSTD_decompressStream(this->dctx, &output, &input); // TODO: check_zstd(ret)
@@ -74,10 +74,13 @@ class zstd_stream_wrapper : public stream_wrapper {
 
 	return (int)ret;
     }
-    int compress(const int _flags = Z_NO_FLUSH) override {
+    int compress(const int endStream) override {
 	ZSTD_inBuffer input = { this->buffIn, this->buffInSize, 0 };
 	ZSTD_outBuffer output = { this->buffOut, this->buffOutSize, 0 };
-	if (_flags == 0) {
+	if (endStream) {
+	    this->ret = ZSTD_endStream(this->cctx, &output);
+	    if (ZSTD_isError(this->ret)) throw zstdException(this->ret);
+	} else {
 	    this->ret = ZSTD_compressStream2(this->cctx, &output, &input, ZSTD_e_continue);
 	    if (ZSTD_isError(this->ret)) throw zstdException(this->ret);
 
@@ -86,10 +89,9 @@ class zstd_stream_wrapper : public stream_wrapper {
 	    this->set_avail_in(this->avail_in() - input.pos);
 
 	    this->ret = (input.pos == input.size);
-	} else {
-	    this->ret = ZSTD_endStream(this->cctx, &output);
-	    if (ZSTD_isError(this->ret)) throw zstdException(this->ret);
 	}
+
+	// Update internal state
 	this->set_next_out(this->next_out() + output.pos);
 	this->set_avail_out(this->avail_out() - output.pos);
 

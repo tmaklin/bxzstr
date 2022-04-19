@@ -109,8 +109,8 @@ inline int bxz_finish(const Compression &type) {
 	break; // Z_FINISH
 #endif
 #ifdef BXZSTR_ZSTD_STREAM_WRAPPER_HPP
-        case zstd: return 4;
-	break; // ZSTD_FINISH
+        case zstd: return 1;
+	break; // endStream == true
 #endif
 	default: throw std::runtime_error("Unrecognized compression type.");
     }
