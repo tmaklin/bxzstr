@@ -62,9 +62,11 @@ class zstd_stream_wrapper : public stream_wrapper {
 		     const int _level = Z_DEFAULT_COMPRESSION, const int = 0)
 	    : is_input(_is_input) {
 	if (is_input) {
-	    this->dctx = ZSTD_createDCtx(); // TODO: Check that dctx != NULL
+	    this->dctx = ZSTD_createDCtx(); // TODO: Check that dctx != NULL, and use params, and size buffers
 	} else {
-	    //ret = deflateInit2(this, _level, Z_DEFLATED, 15+16, 8, Z_DEFAULT_STRATEGY);
+	    this->cctx = ZSTD_createCCtx(); // TODO: as above.
+	    ZSTD_CCtx_setParameter(cctx, ZSTD_c_compressionLevel, _level);
+	    // ZSTD_CCtx_setParameter(cctx, ZSTD_c_nbWorkers, nbThreads); // TODO: implement multithreading.
 	}
 	//if (ret != Z_OK) throw zException(this, ret);
     }
@@ -72,6 +74,7 @@ class zstd_stream_wrapper : public stream_wrapper {
 	if (is_input) {
 	    ZSTD_freeDCtx(this->dctx);
 	} else {
+	    ZSTD_freeCCtx(this->cctx);
 	    //deflateEnd(this);
 	}
     }
@@ -87,14 +90,26 @@ class zstd_stream_wrapper : public stream_wrapper {
 	this->set_next_in(this->next_in() + input.pos);
 	this->set_avail_in(this->avail_in() - input.pos);
 
-	return ret;
+	return ret; // TODO: checks
     }
     int compress(const int _flags = Z_NO_FLUSH) override {
-	return 0;
-	// ret = deflate(this, _flags);
-	// if (ret != Z_OK && ret != Z_STREAM_END && ret != Z_BUF_ERROR)
-	//     throw zException(this, ret);
-	// return ret;
+	ZSTD_inBuffer input = { this->buffIn, this->buffInSize, 0 };
+	ZSTD_outBuffer output = { this->buffOut, this->buffOutSize, 0 };
+	if (_flags == 0) {
+	    size_t remaining = ZSTD_compressStream2(this->cctx, &output, &input, ZSTD_e_continue);
+
+	    // Update internal state
+	    this->set_next_in(this->next_in() + input.pos);
+	    this->set_avail_in(this->avail_in() - input.pos);
+
+	    this->ret = (input.pos == input.size);
+	} else {
+	    ret = ZSTD_endStream(this->cctx, &output);
+	}
+	this->set_next_out(this->next_out() + output.pos);
+	this->set_avail_out(this->avail_out() - output.pos);
+
+	return ret; // TODO: checks
     }
     bool stream_end() const override { return this->ret == 0; }
     bool done() const override { return this->stream_end(); }
@@ -114,6 +129,7 @@ class zstd_stream_wrapper : public stream_wrapper {
     int ret;
 
     ZSTD_DCtx* dctx;
+    ZSTD_CCtx* cctx;
 
     size_t buffInSize;
     void* buffIn;
