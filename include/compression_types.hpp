@@ -40,8 +40,8 @@ inline Compression detect_type(char* in_buff_start, char* in_buff_end) {
     if (in_buff_start + 6 <= in_buff_end && lzma_header) return lzma;
 #endif
 #if defined(BXZSTR_ZSTD_STREAM_WRAPPER_HPP)
-    bool zstd_header = (b0 == 0xFD && b1 == 0x2F && b2 == 0xB5 && b4 == 0x28);
-    if (in_buff_start + 5 <= in_buff_end && zstd_header) return zstd;
+    bool zstd_header = (b0 == 0x28 && b1 == 0xB5 && b2 == 0x2F && b3 == 0xFD);
+    if (in_buff_start + 4 <= in_buff_end && zstd_header) return zstd;
 #endif
     return plaintext;
 }
