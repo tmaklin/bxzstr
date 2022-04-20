@@ -65,3 +65,31 @@ else()
 endif()
 
 configure_file(include/config.hpp.in ${CMAKE_CURRENT_SOURCE_DIR}/include/config.hpp @ONLY)
+
+## Download googletest if building tests
+if(CMAKE_BUILD_TESTS)
+  if (DEFINED CMAKE_GOOGLETEST_HEADERS)
+    message(STATUS "googletest headers provided in: ${CMAKE_GOOGLETEST_HEADERS}")
+  else()
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/test/CMakeLists-googletest.txt.in ${CMAKE_CURRENT_BINARY_DIR}/external/googletest-download/CMakeLists.txt)
+    execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
+      RESULT_VARIABLE result
+      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/external/googletest-download )
+    if(result)
+      message(FATAL_ERROR "CMake step for googletest failed: ${result}")
+    endif()
+    execute_process(COMMAND ${CMAKE_COMMAND} --build .
+      RESULT_VARIABLE result
+      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/external/googletest-download )
+    if(result)
+      message(FATAL_ERROR "Build step for googletest failed: ${result}")
+    endif()
+    set(CMAKE_GOOGLETEST_HEADERS ${CMAKE_CURRENT_BINARY_DIR}/external/googletest/googletest/include)
+    add_subdirectory(${CMAKE_CURRENT_BINARY_DIR}/external/googletest
+                     ${CMAKE_CURRENT_BINARY_DIR}/external/googletest/build)
+  endif()
+  set_target_properties(gmock PROPERTIES EXCLUDE_FROM_ALL 1)
+  set_target_properties(gmock_main PROPERTIES EXCLUDE_FROM_ALL 1)
+  include_directories("${CMAKE_GOOGLETEST_HEADERS}")
+  enable_testing()
+endif()
