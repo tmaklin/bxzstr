@@ -77,8 +77,8 @@ for more details on how to implement this. Zlib-like APIs track the
 stream status internally. The argument \_flags may be used to pass
 parameters to the decompression call.
 
-##### int compress(const int endStream)
-As above, but implements the compression operations. The endStream
+##### int compress(const int \_flags)
+As above, but implements the compression operations. The \_flags
 argument should be used to signify that the current chunk is the last
 chunk to compress, and the appropriate function for flushing the
 compressed stream should be called.
@@ -93,27 +93,27 @@ Returns 1 if stream\_end() is true _or_ we have reached an error
 message that signifies the end of the compression/decompression but
 does not necessarily cause the program to abort.
 
-##### const unsigned char* next\_in()
+##### const uint8\_t* next\_in()
 Returns a pointer to the current position in the inbuffer.
 
-##### long avail\_in() const override
+##### long avail\_in() const
 Returns the size of the current inbuffer.
 
-##### unsigned char* next\_out()
+##### uint8\_t* next\_out()
 Returns a pointer to the current position in the outbuffer.
 
-##### long avail\_out() const override
+##### long avail\_out() const
 Returns the size of the current outbuffer.
 
 #### Stream status setters
 ##### void set\_next\_in(const unsigned char* in)
 Sets the current position in the inbuffer to _in_.
 
-##### void set\_avail\_in(long in)
+##### void set\_avail\_in(const long in)
 Sets the size of the current inbuffer to _in_.
 
-##### void set\_nextz_out(const unsigned char* in)
+##### void set\_next\_out(const uint8\_t* in)
 Sets the current position in the outbuffer to _in_.
 
-##### void set\_avail\_out(long in)
+##### void set\_avail\_out(const long in)
 Sets the size of the current outbuffer to _in_.
