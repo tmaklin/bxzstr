@@ -49,7 +49,7 @@ class ZstdStreamWrapperTest : public ::testing::Test {
 };
 
 // Test decompress
-class DecompressTest : public ::testing::Test {
+class ZstdDecompressTest : public ::testing::Test {
   protected:
     void SetUp() override {
 	this->testIn = reinterpret_cast<const unsigned char*>("abcd");
@@ -69,7 +69,7 @@ class DecompressTest : public ::testing::Test {
 };
 
 // Test compress
-class CompressTest : public ::testing::Test {
+class ZstdCompressTest : public ::testing::Test {
   protected:
     void SetUp() override {
 	this->testIn = reinterpret_cast<const unsigned char*>("abcd");
