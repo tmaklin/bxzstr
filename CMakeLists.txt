@@ -102,6 +102,7 @@ if(CMAKE_BUILD_TESTS)
   add_executable(runTests
     ${CMAKE_CURRENT_SOURCE_DIR}/test/src/zstd_stream_wrapper_unittest.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/test/src/test_z_stream_wrapper.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/test/src/test_bz_stream_wrapper.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/test/src/test_zstd_stream_wrapper.cpp)
   add_test(runTests runTests)
   target_link_libraries(runTests gtest gtest_main zstd z bz2 lzma)
