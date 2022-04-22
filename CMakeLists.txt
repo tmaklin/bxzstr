@@ -72,6 +72,14 @@ if(CMAKE_BUILD_TYPE MATCHES Debug)
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -g -Wall -Wextra -Wpedantic")
 endif()
 
+if (CMAKE_VERSION VERSION_LESS "3.1")
+  if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++11")
+  endif ()
+else ()
+  set (CMAKE_CXX_STANDARD 11)
+endif ()
+
 ## Download googletest if building tests
 if(CMAKE_BUILD_TESTS)
   if (DEFINED CMAKE_GOOGLETEST_HEADERS)
@@ -101,10 +109,8 @@ if(CMAKE_BUILD_TESTS)
   enable_testing()
   add_executable(runTests
     ${CMAKE_CURRENT_SOURCE_DIR}/test/src/zstd_stream_wrapper_unittest.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/test/src/test_z_stream_wrapper.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/test/src/test_bz_stream_wrapper.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/test/src/test_lzma_stream_wrapper.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/test/src/test_zstd_stream_wrapper.cpp)
+    ${CMAKE_CURRENT_SOURCE_DIR}/test/src/bxzstr_ofstream_integrationtest.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/test/src/bxzstr_ifstream_integrationtest.cpp)
   add_test(runTests runTests)
   target_link_libraries(runTests gtest gtest_main zstd z bz2 lzma)
 endif()
