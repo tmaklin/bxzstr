@@ -110,7 +110,7 @@ class zstd_stream_wrapper : public stream_wrapper {
 
     size_t buffInSize;
     void* buffIn;
-    size_t buffOutSize;;
+    size_t buffOutSize;
     void* buffOut;
 
     ZSTD_DCtx* dctx;
