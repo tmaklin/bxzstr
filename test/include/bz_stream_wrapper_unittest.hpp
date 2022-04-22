@@ -5,6 +5,10 @@
  * This file is a part of bxzstr (https://github.com/tmaklin/bxzstr)
  * Written by Tommi Mäklin (tommi@maklin.fi) */
 
+#include "bxzstr.hpp"
+
+#if defined(BXZSTR_BZ2_SUPPORT) && (BXZSTR_BZ2_SUPPORT) == 1
+
 #ifndef BXZSTR_BZ_STREAM_WRAPPER_UNITTEST_HPP
 #define BXZSTR_BZ_STREAM_WRAPPER_UNITTEST_HPP
 
@@ -14,8 +18,6 @@
 
 #include "gtest/gtest.h"
 #include "bzlib.h"
-
-#include "bxzstr.hpp"
 
 // Test zException
 class BzExceptionTest : public ::testing::Test {
@@ -112,5 +114,7 @@ class BzCompressTest : public BzCompressAndDecompressTest, public ::testing::Tes
     void TearDown() override {
     }
 };
+
+#endif
 
 #endif

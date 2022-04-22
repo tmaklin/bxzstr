@@ -5,6 +5,10 @@
  * This file is a part of bxzstr (https://github.com/tmaklin/bxzstr)
  * Written by Tommi Mäklin (tommi@maklin.fi) */
 
+#include "bxzstr.hpp"
+
+#if defined(BXZSTR_LZMA_SUPPORT) && (BXZSTR_LZMA_SUPPORT) == 1
+
 #include "zstd_stream_wrapper_unittest.hpp"
 
 #include "zstd.h"
@@ -66,3 +70,5 @@ TEST_F(ZstdCompressTest, CompressUpdatesStreamState) {
     EXPECT_EQ(wrapper->next_out(), &testOut[0]);
     EXPECT_EQ(wrapper->avail_out(), 4);
 }
+
+#endif
