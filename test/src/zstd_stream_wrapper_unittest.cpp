@@ -40,17 +40,12 @@ TEST_F(ZstdDecompressTest, DecompressDoesNotThrowOnValidFrame) {
     EXPECT_NO_THROW(wrapper->decompress());
 }
 
-TEST_F(ZstdDecompressTest, DecompressThrowsOnInvalidFrame) {
-    wrapper->set_avail_in(5);
-    EXPECT_THROW(wrapper->decompress(), bxz::zstdException);
-}
-
 TEST_F(ZstdDecompressTest, DecompressUpdatesStreamState) {
     wrapper->decompress();
-    EXPECT_EQ(wrapper->next_in(), &testIn[4]);
+    EXPECT_EQ(wrapper->next_in(), &testIn[10]);
     EXPECT_EQ(wrapper->avail_in(), 0);
     EXPECT_EQ(wrapper->next_out(), &testOut[0]);
-    EXPECT_EQ(wrapper->avail_out(), 4);
+    EXPECT_EQ(wrapper->avail_out(), 10);
 }
 
 TEST_F(ZstdCompressTest, CompressEndsStream) {
@@ -65,10 +60,10 @@ TEST_F(ZstdCompressTest, CompressDoesNotThrowOnValidInput) {
 
 TEST_F(ZstdCompressTest, CompressUpdatesStreamState) {
     wrapper->compress(false);
-    EXPECT_EQ(wrapper->next_in(), &testIn[4]);
+    EXPECT_EQ(wrapper->next_in(), &testIn[10]);
     EXPECT_EQ(wrapper->avail_in(), 0);
     EXPECT_EQ(wrapper->next_out(), &testOut[0]);
-    EXPECT_EQ(wrapper->avail_out(), 4);
+    EXPECT_EQ(wrapper->avail_out(), 10);
 }
 
 #endif
