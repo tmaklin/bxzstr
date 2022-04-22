@@ -108,6 +108,7 @@ if(CMAKE_BUILD_TESTS)
   include_directories(${CMAKE_CURRENT_SOURCE_DIR}/test/include ${CMAKE_CURRENT_SOURCE_DIR}/include)
   enable_testing()
   add_executable(runTests
+    ${CMAKE_CURRENT_SOURCE_DIR}/test/src/z_stream_wrapper_unittest.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/test/src/zstd_stream_wrapper_unittest.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/test/src/bxzstr_ofstream_integrationtest.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/test/src/bxzstr_ifstream_integrationtest.cpp)
