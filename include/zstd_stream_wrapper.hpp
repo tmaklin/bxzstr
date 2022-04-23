@@ -13,7 +13,6 @@
 #include <zstd.h>
 
 #include <string>
-#include <sstream>
 #include <exception>
 
 #include "stream_wrapper.hpp"
@@ -23,9 +22,7 @@ namespace bxz {
 class zstdException : public std::exception {
   public:
     zstdException(const size_t err) : msg("zstd error: ") {
-	std::ostringstream oss;
-	oss << err;
-	this->msg += "[" + oss.str() + "]: ";
+	this->msg += "[" + std::to_string(err) + "]: ";
         this->msg += ZSTD_getErrorName(err);
     }
     zstdException(const std::string _msg) : msg(_msg) {}
@@ -113,7 +110,7 @@ class zstd_stream_wrapper : public stream_wrapper {
 
     size_t buffInSize;
     void* buffIn;
-    size_t buffOutSize;;
+    size_t buffOutSize;
     void* buffOut;
 
     ZSTD_DCtx* dctx;

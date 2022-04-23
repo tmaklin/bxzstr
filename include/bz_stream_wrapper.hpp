@@ -92,7 +92,7 @@ class bz_stream_wrapper : public bz_stream, public stream_wrapper {
 	}
     }
 
-    int decompress(const int) override {
+    int decompress(const int = 0) override {
 	ret = BZ2_bzDecompress(this);
 	if (ret != BZ_OK && ret != BZ_STREAM_END) throw bzException(ret);
 	return ret;

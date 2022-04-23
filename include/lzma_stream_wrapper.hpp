@@ -84,7 +84,7 @@ class lzma_stream_wrapper : public lzma_stream, public stream_wrapper {
     }
     ~lzma_stream_wrapper() { lzma_end(this); }
 
-    int decompress(const int) override {
+    int decompress(const int = 0) override {
 	ret = lzma_code(this, LZMA_RUN);
 	if (ret != LZMA_OK && ret != LZMA_STREAM_END && ret) throw lzmaException(ret);
 	return (int)ret;

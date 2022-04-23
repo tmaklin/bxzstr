@@ -85,6 +85,12 @@ libraries supported on the system. If the
 command has already been run in CMake, automatic configuration will
 respect the results instead of running find_package again.
 
+## Testing
+bxzstr implements (non-exhaustive) testing for parts of the source
+code using the [googletest](https://github.com/google/googletest)
+framework. For more details, see the documentation at
+[docs/development/building_tests.md](/docs/development/building_tests.md).
+
 ## Requirements and dependencies
 * Compiler with c++11 support
 * CMake v3.0 or greater (for automatic config)
