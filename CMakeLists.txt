@@ -116,7 +116,6 @@ if(CMAKE_BUILD_TESTS)
     ${CMAKE_CURRENT_SOURCE_DIR}/test/src/bxzstr_ofstream_integrationtest.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/test/src/bxzstr_ifstream_integrationtest.cpp)
   add_test(runTests runTests)
-  target_link_libraries(runTests gtest gtest_main zstd z bz2 lzma)
 
   if(DEFINED ZLIB_FOUND)
     target_link_libraries(runTests gtest gtest_main z)
