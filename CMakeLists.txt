@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.0)
 project(bxzstr)
 
+## For FindZstd
+set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
+
 if(DEFINED ZLIB_FOUND)
   if(ZLIB_FOUND)
     set(BXZSTR_Z_SUPPORT 1)
@@ -43,6 +46,21 @@ else()
     set(BXZSTR_LZMA_SUPPORT 1)
   else()
     set(BXZSTR_LZMA_SUPPORT 0)
+  endif()
+endif()
+
+if(DEFINED ZSTD_FOUND)
+  if(ZSTD_FOUND)
+    set(BXZSTR_ZSTD_SUPPORT 1)
+  else()
+    set(BXZSTR_ZSTD_SUPPORT 0)
+  endif()
+else()
+  find_package(Zstd)
+  if(ZSTD_FOUND)
+    set(BXZSTR_ZSTD_SUPPORT 1)
+  else()
+    set(BXZSTR_ZSTD_SUPPORT 0)
   endif()
 endif()
 
