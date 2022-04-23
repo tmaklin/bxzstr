@@ -14,6 +14,7 @@ class stream_wrapper {
   private:
   public:
     stream_wrapper() {};
+    stream_wrapper(const bool _isInput, const int _level, const int _flags);
     virtual ~stream_wrapper() = default;
     virtual int decompress(const int _flags = 0) =0;
     virtual int compress(const int _flags = 0) =0;
