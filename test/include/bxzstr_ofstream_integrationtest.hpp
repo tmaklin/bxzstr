@@ -19,7 +19,7 @@
 
 // Integration tests for bxz::ofstream
 //
-// Define some vals that are used in all decompression tests
+// Define some vals that are used in all compression tests
 class CompressionTest {
   protected:
     // Expected values
@@ -61,7 +61,8 @@ class CompressionTest {
 };
 uint32_t CompressionTest::n_out_vals = 10;
 
-// Test z decompression
+#if defined(BXZSTR_Z_SUPPORT) && (BXZSTR_Z_SUPPORT) == 1
+// Test z compression
 class ZCompressionTest : public CompressionTest, public ::testing::Test {
   protected:
     void SetUp() override {
@@ -78,7 +79,10 @@ class ZCompressionTest : public CompressionTest, public ::testing::Test {
 
 };
 
-// Test bz decompression
+#endif
+
+#if defined(BXZSTR_BZ2_SUPPORT) && (BXZSTR_BZ2_SUPPORT) == 1
+// Test bz compression
 class BzCompressionTest : public CompressionTest, public ::testing::Test {
   protected:
     void SetUp() override {
@@ -96,7 +100,11 @@ class BzCompressionTest : public CompressionTest, public ::testing::Test {
 
 };
 
-// Test lzma decompression
+#endif
+
+
+#if defined(BXZSTR_LZMA_SUPPORT) && (BXZSTR_LZMA_SUPPORT) == 1
+// Test lzma compression
 class LzmaCompressionTest : public CompressionTest, public ::testing::Test {
   protected:
     void SetUp() override {
@@ -118,7 +126,11 @@ class LzmaCompressionTest : public CompressionTest, public ::testing::Test {
 
 };
 
-// Test zstd decompression
+#endif
+
+
+#if defined(BXZSTR_ZSTD_SUPPORT) && (BXZSTR_ZSTD_SUPPORT) == 1
+// Test zstd compression
 class ZstdCompressionTest : public CompressionTest, public ::testing::Test {
   protected:
     void SetUp() override {
@@ -135,5 +147,6 @@ class ZstdCompressionTest : public CompressionTest, public ::testing::Test {
 
 };
 
+#endif
 
 #endif

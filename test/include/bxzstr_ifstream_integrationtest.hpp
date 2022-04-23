@@ -53,6 +53,7 @@ class DecompressionTest {
 uint32_t DecompressionTest::n_in_vals = 10;
 std::vector<char> DecompressionTest::expected = std::vector<char>(10, '1');
 
+#if defined(BXZSTR_Z_SUPPORT) && (BXZSTR_Z_SUPPORT) == 1
 // Test z decompression
 class ZDecompressionTest : public DecompressionTest, public ::testing::Test {
   protected:
@@ -68,6 +69,9 @@ class ZDecompressionTest : public DecompressionTest, public ::testing::Test {
 
 };
 
+#endif
+
+#if defined(BXZSTR_BZ2_SUPPORT) && (BXZSTR_BZ2_SUPPORT) == 1
 // Test bz decompression
 class BzDecompressionTest : public DecompressionTest, public ::testing::Test {
   protected:
@@ -83,6 +87,9 @@ class BzDecompressionTest : public DecompressionTest, public ::testing::Test {
 
 };
 
+#endif
+
+#if defined(BXZSTR_LZMA_SUPPORT) && (BXZSTR_LZMA_SUPPORT) == 1
 // Test lzma decompression
 class LzmaDecompressionTest : public DecompressionTest, public ::testing::Test {
   protected:
@@ -100,6 +107,9 @@ class LzmaDecompressionTest : public DecompressionTest, public ::testing::Test {
 
 };
 
+#endif
+
+#if defined(BXZSTR_ZSTD_SUPPORT) && (BXZSTR_ZSTD_SUPPORT) == 1
 // Test zstd decompression
 class ZstdDecompressionTest : public DecompressionTest, public ::testing::Test {
   protected:
@@ -112,5 +122,7 @@ class ZstdDecompressionTest : public DecompressionTest, public ::testing::Test {
     }
 
 };
+
+#endif
 
 #endif
