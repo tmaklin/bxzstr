@@ -14,6 +14,7 @@
 
 #include <fstream>
 #include <memory>
+#include <stdexcept>
 
 #include "stream_wrapper.hpp"
 #include "strict_fstream.hpp"
@@ -43,6 +44,45 @@ class istreambuf : public std::streambuf {
     virtual ~istreambuf() {
         delete [] in_buff;
         delete [] out_buff;
+    }
+
+    virtual std::streampos seekoff(std::streamoff off, std::ios_base::seekdir way, std::ios_base::openmode which = std::ios_base::in | std::ios_base::out){
+        std::streampos pos;
+
+        if (way == std::ios_base::cur)
+            pos = get_cursor() + off;
+        else if (way == std::ios_base::end)
+            throw std::runtime_error("Cannot seek from the end position on a compressed stream (the size is not known in advance).");
+        else if (way == std::ios_base::beg)
+            pos = off;
+        
+        if(pos == get_cursor()) return get_cursor(); // we are just finding the current position
+
+        return seekpos(pos, which);
+    }
+
+    virtual std::streampos seekpos(std::streampos pos, std::ios_base::openmode which = std::ios_base::in | std::ios_base::out){
+        if(pos == 0){
+            seek_to_zero(); // reset the stream
+            return 0; // this should not fail
+        }
+
+        while(pos != get_cursor()){
+            underflow();
+            std::streamoff relOff = pos-get_cursor();
+            if(relOff < 0) {              
+                if(eback() <= gptr()+relOff) { // if it is buffered just rewind to the position
+                    setg(eback(), gptr()+relOff, egptr());
+                }else{ // otherwise we have to reset/seek to the zero position and seek forward
+                    seek_to_zero();
+                }
+            }else{
+                if(gptr()+relOff >= egptr()) relOff = egptr()-gptr();
+                setg(eback(), gptr()+relOff, egptr());
+            }
+        }
+        
+        return get_cursor();
     }
 
     virtual std::streambuf::int_type underflow() {
@@ -91,12 +131,27 @@ class istreambuf : public std::streambuf {
             // 2 exit conditions:
             // - end of input: there might or might not be output available
             // - out_buff_free_start != out_buff: output available
+            out_buff_end_abs += out_buff_free_start-out_buff;
             this->setg(out_buff, out_buff, out_buff_free_start);
         }
         return this->gptr() == this->egptr()
 	    ? traits_type::eof() : traits_type::to_int_type(*this->gptr());
     }
   private:
+  
+    std::streampos get_cursor(){
+        return out_buff_end_abs + gptr() - egptr();
+    }
+
+    void seek_to_zero(){
+        in_buff_start = in_buff;
+        in_buff_end = in_buff;
+        setg(out_buff, out_buff, out_buff);
+        if(sbuf_p->pubseekpos(0) != 0) throw std::runtime_error("could not seek underlying stream.");
+        out_buff_end_abs = 0;
+        strm_p.reset(); // new one will be created on underflow
+    }
+
     std::streambuf* sbuf_p;
     char* in_buff;
     char* in_buff_start;
@@ -107,6 +162,7 @@ class istreambuf : public std::streambuf {
     bool auto_detect;
     bool auto_detect_run;
     Compression type;
+    std::streampos out_buff_end_abs;
 
     static const std::size_t default_buff_size = (std::size_t)1 << 20;
 }; // class istreambuf
