@@ -17,12 +17,14 @@
 #include <exception>
 
 #include "stream_wrapper.hpp"
+#include "bxzException.hpp"
 
 namespace bxz {
 /// Exception class thrown by failed bzlib operations.
-class bzException : public std::exception {
+class bzException : public bxzException {
   public:
-    bzException(const int ret) : _msg("bzlib: ") {
+    bzException(const int ret) {
+	_msg = "bzlib: ";
 	switch (ret) {
             case BZ_CONFIG_ERROR:
                 _msg += "BZ_CONFIG_ERROR: ";
@@ -58,13 +60,9 @@ class bzException : public std::exception {
 		break;
         }
         _msg += ret;
+	terminate_if_no_exceptions();
     }
-    bzException(const std::string msg) : _msg(msg) {}
-
-    const char * what() const noexcept { return _msg.c_str(); }
-
-  private:
-    std::string _msg;
+    bzException(const std::string &msg) : bxzException(msg) {}
 }; // class bzException
 
 namespace detail {
@@ -82,7 +80,7 @@ class bz_stream_wrapper : public bz_stream, public stream_wrapper {
 	} else {
 	    ret = BZ2_bzCompressInit(this, _level, 0, _wf);
 	}
-	if (ret != BZ_OK) throw bzException(ret);
+	if (ret != BZ_OK) bxzThrow bzException(ret);
     }
     ~bz_stream_wrapper() {
 	if (is_input) {
@@ -94,12 +92,12 @@ class bz_stream_wrapper : public bz_stream, public stream_wrapper {
 
     int decompress(const int = 0) override {
 	ret = BZ2_bzDecompress(this);
-	if (ret != BZ_OK && ret != BZ_STREAM_END) throw bzException(ret);
+	if (ret != BZ_OK && ret != BZ_STREAM_END) bxzThrow bzException(ret);
 	return ret;
     }
     int compress(const int _flags = BZ_RUN) override {
 	ret = BZ2_bzCompress(this, _flags);
-	if (!ret) throw bzException(ret);
+	if (!ret) bxzThrow bzException(ret);
 	return ret;
     }
     bool stream_end() const override { return this->ret == BZ_STREAM_END; }

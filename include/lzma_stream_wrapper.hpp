@@ -17,13 +17,15 @@
 #include <exception>
 
 #include "stream_wrapper.hpp"
+#include "bxzException.hpp"
 
 namespace bxz {
 /// Exception class thrown by failed liblzma operations.
-class lzmaException : public std::exception {
+class lzmaException : public bxzException {
   public:
-    lzmaException(const lzma_ret ret) : _msg("liblzma: ") {
-        switch (ret) {
+    lzmaException(const lzma_ret ret) {
+	_msg = "liblzma: ";
+	switch (ret) {
             case LZMA_MEM_ERROR:
 		_msg += "LZMA_MEM_ERROR: ";
 		break;
@@ -58,13 +60,9 @@ class lzmaException : public std::exception {
 		break;
         }
         _msg += ret;
+	terminate_if_no_exceptions();
     }
-    lzmaException(const std::string msg) : _msg(msg) {}
-
-    const char * what() const noexcept { return _msg.c_str(); }
-
-  private:
-    std::string _msg;
+    lzmaException(const std::string &msg) : bxzException(msg) {}
 }; // class lzmaException
 
 namespace detail {
@@ -80,19 +78,19 @@ class lzma_stream_wrapper : public lzma_stream, public stream_wrapper {
 	} else {
 	    ret = lzma_easy_encoder(this, _level, LZMA_CHECK_CRC64);
 	}
-	if (ret != LZMA_OK) throw lzmaException(ret);
+	if (ret != LZMA_OK) bxzThrow lzmaException(ret);
     }
     ~lzma_stream_wrapper() { lzma_end(this); }
 
     int decompress(const int = 0) override {
 	ret = lzma_code(this, LZMA_RUN);
-	if (ret != LZMA_OK && ret != LZMA_STREAM_END && ret) throw lzmaException(ret);
+	if (ret != LZMA_OK && ret != LZMA_STREAM_END && ret) bxzThrow lzmaException(ret);
 	return (int)ret;
     }
     int compress(const int _flags = LZMA_RUN) override {
 	ret = lzma_code(this, (lzma_action)_flags);
 	if (ret != LZMA_OK && ret != LZMA_STREAM_END && ret != LZMA_BUF_ERROR)
-	    throw lzmaException(ret);
+	    bxzThrow lzmaException(ret);
 	return (int)ret;
     }
     bool stream_end() const override { return this->ret == LZMA_STREAM_END; }

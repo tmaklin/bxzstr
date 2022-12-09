@@ -16,22 +16,19 @@
 #include <exception>
 
 #include "stream_wrapper.hpp"
+#include "bxzException.hpp"
 
 namespace bxz {
 /// Exception class thrown by failed zstd operations.
-class zstdException : public std::exception {
+class zstdException : public bxzException {
   public:
-    zstdException(const size_t err) : msg("zstd error: ") {
-	this->msg += "[" + std::to_string(err) + "]: ";
-        this->msg += ZSTD_getErrorName(err);
+    zstdException(const size_t err) {
+	_msg = "zstd error: ";
+	this->_msg += "[" + std::to_string(err) + "]: ";
+        this->_msg += ZSTD_getErrorName(err);
+	terminate_if_no_exceptions();
     }
-    zstdException(const std::string _msg) : msg(_msg) {}
-
-    const char * what() const noexcept { return this->msg.c_str(); }
-
-  private:
-    std::string msg;
-
+    zstdException(const std::string &msg) : bxzException(msg) {}
 }; // class zstdException
 
 namespace detail {
@@ -42,13 +39,13 @@ class zstd_stream_wrapper : public stream_wrapper {
 	    : isInput(_isInput) {
 	if (this->isInput) {
 	    this->dctx = ZSTD_createDCtx();
-	    if (this->dctx == NULL) throw zstdException("ZSTD_createDCtx() failed!");
+	    if (this->dctx == NULL) bxzThrow zstdException("ZSTD_createDCtx() failed!");
 	} else {
 	    this->cctx = ZSTD_createCCtx();
-	    if (this->cctx == NULL) throw zstdException("ZSTD_createCCtx() failed!");
+	    if (this->cctx == NULL) bxzThrow zstdException("ZSTD_createCCtx() failed!");
 	    this->ret = ZSTD_CCtx_setParameter(cctx, ZSTD_c_compressionLevel, level);
 	}
-	if (ZSTD_isError(this->ret)) throw zstdException(this->ret);
+	if (ZSTD_isError(this->ret)) bxzThrow zstdException(this->ret);
 
     }
 
@@ -65,7 +62,7 @@ class zstd_stream_wrapper : public stream_wrapper {
 	this->update_outbuffer();
 
 	this->ret = ZSTD_decompressStream(this->dctx, &output, &input);
-	if (ZSTD_isError(this->ret)) throw zstdException(this->ret);
+	if (ZSTD_isError(this->ret)) bxzThrow zstdException(this->ret);
 
 	this->update_stream_state();
 
@@ -78,10 +75,10 @@ class zstd_stream_wrapper : public stream_wrapper {
 
 	if (endStream) {
 	    this->ret = ZSTD_endStream(this->cctx, &output);
-	    if (ZSTD_isError(this->ret)) throw zstdException(this->ret);
+	    if (ZSTD_isError(this->ret)) bxzThrow zstdException(this->ret);
 	} else {
 	    this->ret = ZSTD_compressStream2(this->cctx, &output, &input, ZSTD_e_continue);
-	    if (ZSTD_isError(this->ret)) throw zstdException(this->ret);
+	    if (ZSTD_isError(this->ret)) bxzThrow zstdException(this->ret);
 
 	    this->ret = (input.pos == input.size);
 	}

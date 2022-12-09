@@ -11,18 +11,31 @@
 
 #include "lzma_stream_wrapper_unittest.hpp"
 
-TEST_F(LzmaExceptionTest, MsgConstructorWorks) {
-    bxz::lzmaException e(msgConstructorValue);
-    const std::string &got = e.what();
-    EXPECT_EQ(msgConstructorExpected, got);
+TEST_F(LzmaDecompressTest, DecompressUpdatesStreamState) {
+    wrapper->decompress();
+    EXPECT_EQ(wrapper->next_in(), &testIn[10]);
+    EXPECT_EQ(wrapper->avail_in(), 0);
+    EXPECT_EQ(wrapper->next_out(), &testOut[0]);
+    EXPECT_EQ(wrapper->avail_out(), 10);
 }
 
-TEST_F(LzmaExceptionTest, ErrcodeConstructorWorks) {
-    for (size_t i = 0; i < errcodeInputs.size(); ++i) {
-	bxz::lzmaException e(errcodeInputs.at(i));
-	const std::string &got = e.what();
-	EXPECT_EQ(errcodeExpecteds.at(i), got);
-    }
+TEST_F(LzmaCompressTest, CompressUpdatesStreamState) {
+    wrapper->compress(false);
+    EXPECT_EQ(wrapper->next_in(), &testIn[0]);
+    EXPECT_EQ(wrapper->avail_in(), 10);
+    EXPECT_EQ(wrapper->next_out(), &testOut[10]);
+    EXPECT_EQ(wrapper->avail_out(), 0);
+}
+
+#if defined(__EXCEPTIONS) && __EXCEPTIONS == 1
+TEST_F(LzmaCompressTest, CompressEndsStream) {
+    wrapper->set_avail_out(0);
+    wrapper->set_next_out(&testOut[10]);
+    EXPECT_NO_THROW(wrapper->compress(true));
+}
+
+TEST_F(LzmaCompressTest, CompressDoesNotThrowOnValidInput) {
+    EXPECT_NO_THROW(wrapper->compress(false));
 }
 
 TEST_F(LzmaStreamWrapperTest, ConstructorDoesNotThrowOnInput) {
@@ -42,30 +55,19 @@ TEST_F(LzmaDecompressTest, DecompressThrowsOnInvalidInput) {
     EXPECT_THROW(wrapper->decompress(), bxz::lzmaException);
 }
 
-TEST_F(LzmaDecompressTest, DecompressUpdatesStreamState) {
-    wrapper->decompress();
-    EXPECT_EQ(wrapper->next_in(), &testIn[10]);
-    EXPECT_EQ(wrapper->avail_in(), 0);
-    EXPECT_EQ(wrapper->next_out(), &testOut[0]);
-    EXPECT_EQ(wrapper->avail_out(), 10);
+TEST_F(LzmaExceptionTest, MsgConstructorWorks) {
+    bxz::lzmaException e(msgConstructorValue);
+    const std::string &got = e.what();
+    EXPECT_EQ(msgConstructorExpected, got);
 }
 
-TEST_F(LzmaCompressTest, CompressEndsStream) {
-    wrapper->set_avail_out(0);
-    wrapper->set_next_out(&testOut[10]);
-    EXPECT_NO_THROW(wrapper->compress(true));
+TEST_F(LzmaExceptionTest, ErrcodeConstructorWorks) {
+    for (size_t i = 0; i < errcodeInputs.size(); ++i) {
+	bxz::lzmaException e(errcodeInputs.at(i));
+	const std::string &got = e.what();
+	EXPECT_EQ(errcodeExpecteds.at(i), got);
+    }
 }
-
-TEST_F(LzmaCompressTest, CompressDoesNotThrowOnValidInput) {
-    EXPECT_NO_THROW(wrapper->compress(false));
-}
-
-TEST_F(LzmaCompressTest, CompressUpdatesStreamState) {
-    wrapper->compress(false);
-    EXPECT_EQ(wrapper->next_in(), &testIn[0]);
-    EXPECT_EQ(wrapper->avail_in(), 10);
-    EXPECT_EQ(wrapper->next_out(), &testOut[10]);
-    EXPECT_EQ(wrapper->avail_out(), 0);
-}
+#endif
 
 #endif

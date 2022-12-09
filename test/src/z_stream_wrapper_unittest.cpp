@@ -11,18 +11,31 @@
 
 #include "z_stream_wrapper_unittest.hpp"
 
-TEST_F(ZExceptionTest, MsgConstructorWorks) {
-    bxz::zException e(msgConstructorValue);
-    const std::string &got = e.what();
-    EXPECT_EQ(msgConstructorExpected, got);
+TEST_F(ZDecompressTest, DecompressUpdatesStreamState) {
+    wrapper->decompress();
+    EXPECT_EQ(wrapper->next_in(), &testIn[10]);
+    EXPECT_EQ(wrapper->avail_in(), 0);
+    EXPECT_EQ(wrapper->next_out(), &testOut[0]);
+    EXPECT_EQ(wrapper->avail_out(), 10);
 }
 
-TEST_F(ZExceptionTest, ErrcodeConstructorWorks) {
-    for (size_t i = 0; i < errcodeInputs.size(); ++i) {
-	bxz::zException e(msgConstructorValue, errcodeInputs.at(i));
-	const std::string &got = e.what();
-	EXPECT_EQ(errcodeExpecteds.at(i), got);
-    }
+TEST_F(ZCompressTest, CompressUpdatesStreamState) {
+    wrapper->compress(false);
+    EXPECT_EQ(wrapper->next_in(), &testIn[10]);
+    EXPECT_EQ(wrapper->avail_in(), 0);
+    EXPECT_EQ(wrapper->next_out(), &testOut[10]);
+    EXPECT_EQ(wrapper->avail_out(), 0);
+}
+
+#if defined(__EXCEPTIONS) && __EXCEPTIONS == 1
+TEST_F(ZCompressTest, CompressEndsStream) {
+    wrapper->set_avail_out(0);
+    wrapper->set_next_out(&testOut[10]);
+    EXPECT_NO_THROW(wrapper->compress(true));
+}
+
+TEST_F(ZCompressTest, CompressDoesNotThrowOnValidInput) {
+    EXPECT_NO_THROW(wrapper->compress(false));
 }
 
 TEST_F(ZStreamWrapperTest, ConstructorDoesNotThrowOnInput) {
@@ -42,30 +55,19 @@ TEST_F(ZDecompressTest, DecompressThrowsOnInvalidInput) {
     EXPECT_THROW(wrapper->decompress(), bxz::zException);
 }
 
-TEST_F(ZDecompressTest, DecompressUpdatesStreamState) {
-    wrapper->decompress();
-    EXPECT_EQ(wrapper->next_in(), &testIn[10]);
-    EXPECT_EQ(wrapper->avail_in(), 0);
-    EXPECT_EQ(wrapper->next_out(), &testOut[0]);
-    EXPECT_EQ(wrapper->avail_out(), 10);
+TEST_F(ZExceptionTest, MsgConstructorWorks) {
+    bxz::zException e(msgConstructorValue);
+    const std::string &got = e.what();
+    EXPECT_EQ(msgConstructorExpected, got);
 }
 
-TEST_F(ZCompressTest, CompressEndsStream) {
-    wrapper->set_avail_out(0);
-    wrapper->set_next_out(&testOut[10]);
-    EXPECT_NO_THROW(wrapper->compress(true));
+TEST_F(ZExceptionTest, ErrcodeConstructorWorks) {
+    for (size_t i = 0; i < errcodeInputs.size(); ++i) {
+	bxz::zException e(msgConstructorValue, errcodeInputs.at(i));
+	const std::string &got = e.what();
+	EXPECT_EQ(errcodeExpecteds.at(i), got);
+    }
 }
-
-TEST_F(ZCompressTest, CompressDoesNotThrowOnValidInput) {
-    EXPECT_NO_THROW(wrapper->compress(false));
-}
-
-TEST_F(ZCompressTest, CompressUpdatesStreamState) {
-    wrapper->compress(false);
-    EXPECT_EQ(wrapper->next_in(), &testIn[10]);
-    EXPECT_EQ(wrapper->avail_in(), 0);
-    EXPECT_EQ(wrapper->next_out(), &testOut[10]);
-    EXPECT_EQ(wrapper->avail_out(), 0);
-}
+#endif
 
 #endif

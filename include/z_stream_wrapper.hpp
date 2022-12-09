@@ -17,12 +17,14 @@
 #include <exception>
 
 #include "stream_wrapper.hpp"
+#include "bxzException.hpp"
 
 namespace bxz {
 /// Exception class thrown by failed zlib operations.
-class zException : public std::exception {
+class zException : public bxzException {
   public:
-    zException(const std::string &msg, const int ret) : _msg("zlib: ") {
+    zException(const std::string &msg, const int ret) {
+	_msg = ("zlib: ");
         switch (ret) {
             case Z_STREAM_ERROR:
 		_msg += "Z_STREAM_ERROR: ";
@@ -46,13 +48,9 @@ class zException : public std::exception {
 		break;
         }
         _msg += msg;
+	terminate_if_no_exceptions();
     }
-    zException(const std::string msg) : _msg(msg) {}
-
-    const char * what() const noexcept { return _msg.c_str(); }
-
-  private:
-    std::string _msg;
+    zException(const std::string &msg) : bxzException(msg) {}
 }; // class zException
 
 namespace detail {
@@ -71,7 +69,7 @@ class z_stream_wrapper : public z_stream, public stream_wrapper {
 	} else {
 	    ret = deflateInit2(this, _level, Z_DEFLATED, 15+16, 8, Z_DEFAULT_STRATEGY);
 	}
-	if (ret != Z_OK) throw zException(this->msg, ret);
+	if (ret != Z_OK) bxzThrow zException(this->msg, ret);
     }
     ~z_stream_wrapper() {
 	if (is_input) {
@@ -83,13 +81,13 @@ class z_stream_wrapper : public z_stream, public stream_wrapper {
 
     int decompress(const int _flags = Z_NO_FLUSH) override {
 	ret = inflate(this, _flags);
-	if (ret != Z_OK && ret != Z_STREAM_END) throw zException(this->msg, ret);
+	if (ret != Z_OK && ret != Z_STREAM_END) bxzThrow zException(this->msg, ret);
 	return ret;
     }
     int compress(const int _flags = Z_NO_FLUSH) override {
 	ret = deflate(this, _flags);
 	if (ret != Z_OK && ret != Z_STREAM_END && ret != Z_BUF_ERROR)
-	    throw zException(this->msg, ret);
+	    bxzThrow zException(this->msg, ret);
 	return ret;
     }
     bool stream_end() const override { return this->ret == Z_STREAM_END; }

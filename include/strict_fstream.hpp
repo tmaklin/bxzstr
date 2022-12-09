@@ -16,6 +16,8 @@
 #include <cstring>
 #include <string>
 
+#include "bxzException.hpp"
+
 /**
  * This namespace defines wrappers for std::ifstream, std::ofstream, and
  * std::fstream objects. The wrappers perform the following steps:
@@ -52,17 +54,6 @@ namespace strict_fstream
 //     buff.resize(buff.find('\0'));
 //     return buff;
 // }
-
-/// Exception class thrown by failed operations.
-class Exception
-    : public std::exception
-{
-public:
-    Exception(const std::string& msg) : _msg(msg) {}
-    const char * what() const noexcept { return _msg.c_str(); }
-private:
-    std::string _msg;
-}; // class Exception
 
 namespace detail
 {
@@ -107,15 +98,15 @@ struct static_method_holder
     {
         if ((mode & std::ios_base::trunc) && ! (mode & std::ios_base::out))
         {
-            throw Exception(std::string("strict_fstream: open('") + filename + "'): mode error: trunc and not out");
+	    bxzThrow bxz::bxzException("strict_fstream: open('" + filename + "'): mode error: " + "trunc and not out");
         }
         else if ((mode & std::ios_base::app) && ! (mode & std::ios_base::out))
         {
-            throw Exception(std::string("strict_fstream: open('") + filename + "'): mode error: app and not out");
+	    bxzThrow bxz::bxzException("strict_fstream: open('" + filename + "'): mode error: " + "app and not out");
         }
         else if ((mode & std::ios_base::trunc) && (mode & std::ios_base::app))
         {
-            throw Exception(std::string("strict_fstream: open('") + filename + "'): mode error: trunc and app");
+	    bxzThrow bxz::bxzException("strict_fstream: open('" + filename + "'): mode error: " + "trunc and app");
         }
      }
     static void check_open(std::ios * s_p)
@@ -128,12 +119,16 @@ struct static_method_holder
     static void check_peek(std::istream * is_p)
     {
         bool peek_failed = true;
+#if defined(__EXCEPTIONS) && __EXCEPTIONS == 1
         try
         {
+#endif
             is_p->peek();
             peek_failed = is_p->fail();
+#if defined(__EXCEPTIONS) && __EXCEPTIONS == 1
         }
-        catch (std::ios_base::failure &e) {}
+	catch (std::ios_base::failure &e) {}
+#endif
         if (peek_failed)
         {
 	    is_p->setstate(std::ios::failbit);

@@ -15,8 +15,15 @@
 #include "lzma_stream_wrapper.hpp"
 #include "z_stream_wrapper.hpp"
 #include "zstd_stream_wrapper.hpp"
+#include "bxzException.hpp"
 
 namespace bxz {
+/// Exception class thrown by failed zstd operations.
+class typeException : public bxzException {
+  public:
+    typeException(const std::string &msg) : bxzException(msg) {}
+}; // class typeException
+
     enum Compression { z, bz2, lzma, zstd, plaintext };
 inline Compression detect_type(char* in_buff_start, char* in_buff_end) {
     unsigned char b0 = *reinterpret_cast< unsigned char * >(in_buff_start);
@@ -65,7 +72,7 @@ inline void init_stream(const Compression &type, const bool is_input, const int 
         case zstd : strm_p->reset(new detail::zstd_stream_wrapper(is_input, level));
 	break;
 #endif
-	default : throw std::runtime_error("Unrecognized compression type.");
+	default : bxzThrow typeException("Unrecognized compression type.");
     }
 }
 inline void init_stream(const Compression &type, const bool is_input,
@@ -91,7 +98,7 @@ inline int bxz_run(const Compression &type) {
         case zstd: return 0;
 	break;// ZSTD_NO_FLUSH
 #endif
-	default: throw std::runtime_error("Unrecognized compression type.");
+	default: bxzThrow typeException("Unrecognized compression type.");
     }
 }
 inline int bxz_finish(const Compression &type) {
@@ -112,7 +119,7 @@ inline int bxz_finish(const Compression &type) {
         case zstd: return 1;
 	break; // endStream == true
 #endif
-	default: throw std::runtime_error("Unrecognized compression type.");
+	default: bxzThrow typeException("Unrecognized compression type.");
     }
 }
 }
