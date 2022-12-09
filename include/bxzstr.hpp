@@ -19,8 +19,14 @@
 #include "stream_wrapper.hpp"
 #include "strict_fstream.hpp"
 #include "compression_types.hpp"
+#include "bxzException.hpp"
 
 namespace bxz {
+class seekException : public bxzException {
+  public:
+    seekException(const std::string &msg) : bxzException(msg) {}
+}; // class seekException
+
 class istreambuf : public std::streambuf {
   public:
     istreambuf(std::streambuf * _sbuf_p, std::size_t _buff_size = default_buff_size,
@@ -52,7 +58,7 @@ class istreambuf : public std::streambuf {
         if (way == std::ios_base::cur)
             pos = get_cursor() + off;
         else if (way == std::ios_base::end)
-            throw std::runtime_error("Cannot seek from the end position on a compressed stream (the size is not known in advance).");
+            bxzThrow bxz::seekException("Cannot seek from the end position on a compressed stream (the size is not known in advance).");
         else if (way == std::ios_base::beg)
             pos = off;
         
@@ -147,7 +153,7 @@ class istreambuf : public std::streambuf {
         in_buff_start = in_buff;
         in_buff_end = in_buff;
         setg(out_buff, out_buff, out_buff);
-        if(sbuf_p->pubseekpos(0) != 0) throw std::runtime_error("could not seek underlying stream.");
+        if(sbuf_p->pubseekpos(0) != 0) bxzThrow bxz::seekException("could not seek underlying stream.");
         out_buff_end_abs = 0;
         strm_p.reset(); // new one will be created on underflow
     }
