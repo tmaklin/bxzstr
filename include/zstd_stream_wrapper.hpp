@@ -38,7 +38,7 @@ namespace detail {
 class zstd_stream_wrapper : public stream_wrapper {
   public:
     zstd_stream_wrapper(const bool _isInput = true,
-			const int level = ZSTD_defaultCLevel(), const int = 0)
+			const int level = ZSTD_CLEVEL_DEFAULT, const int = 0)
 	    : isInput(_isInput) {
 	if (this->isInput) {
 	    this->dctx = ZSTD_createDCtx();
