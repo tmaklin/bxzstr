@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.13)
 project(bxzstr)
 
 ## For FindZstd
@@ -11,8 +11,10 @@ if(DEFINED ZLIB_FOUND)
     set(BXZSTR_Z_SUPPORT 0)
   endif()
 else()
-  find_package(ZLIB)
+  # -- locate zlib
+  find_package(ZLIB 1.2.3) # defines imported target ZLIB::ZLIB
   if(ZLIB_FOUND)
+    message(STATUS "bxzstr - found libz (version: ${ZLIB_VERSION_STRING})")
     set(BXZSTR_Z_SUPPORT 1)
   else()
     set(BXZSTR_Z_SUPPORT 0)
@@ -28,6 +30,7 @@ if(DEFINED BZIP2_FOUND)
 else()
   find_package(BZip2)
   if(BZIP2_FOUND)
+    message(STATUS "bxzstr - found libbz2 (version: ${BZIP2_VERSION_STRING})")
     set(BXZSTR_BZ2_SUPPORT 1)
   else()
     set(BXZSTR_BZ2_SUPPORT 0)
@@ -43,6 +46,7 @@ if(DEFINED LIBLZMA_FOUND)
 else()
   find_package(LibLZMA)
   if(LIBLZMA_FOUND)
+    message(STATUS "bxzstr - found liblzma (version: ${BZIP2_VERSION_STRING})")
     set(BXZSTR_LZMA_SUPPORT 1)
   else()
     set(BXZSTR_LZMA_SUPPORT 0)
@@ -58,6 +62,7 @@ if(DEFINED ZSTD_FOUND)
 else()
   find_package(Zstd)
   if(ZSTD_FOUND)
+    message(STATUS "bxzstr - found libzstd (version: ${ZSTD_VERSION_STRING})")
     set(BXZSTR_ZSTD_SUPPORT 1)
   else()
     set(BXZSTR_ZSTD_SUPPORT 0)
@@ -79,6 +84,17 @@ if (CMAKE_VERSION VERSION_LESS "3.1")
 else ()
   set (CMAKE_CXX_STANDARD 11)
 endif ()
+
+# -- add target
+
+add_library(bxzstr INTERFACE)
+add_library(bxzstr::bxzstr ALIAS bxzstr)
+
+# -- set target properties
+
+target_include_directories(bxzstr INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")
+target_link_libraries(bxzstr INTERFACE ZLIB::ZLIB BZip2::BZip2 LibLZMA::LibLZMA Zstd::Zstd)
+target_compile_features(bxzstr INTERFACE cxx_std_11) # require c++11 flag
 
 ## Download googletest if building tests
 if(CMAKE_BUILD_TESTS)
