@@ -12,7 +12,7 @@ if(DEFINED ZLIB_FOUND)
   endif()
 else()
   # -- locate zlib
-  find_package(ZLIB 1.2.3) # defines imported target ZLIB::ZLIB
+  find_package(ZLIB) # defines imported target ZLIB::ZLIB
   if(ZLIB_FOUND)
     message(STATUS "bxzstr - found libz (version: ${ZLIB_VERSION_STRING})")
     set(BXZSTR_Z_SUPPORT 1)
