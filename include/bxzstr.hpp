@@ -7,7 +7,7 @@
  * file from the zstr project (https://github.com/mateidavid/zstr)
  * written by Matei David (https://github.com/mateidavid). */
 
-#include "config.hpp"
+#include "bxzstr_config.hpp"
 
 #ifndef BXZSTR_BXZSTR_HPP
 #define BXZSTR_BXZSTR_HPP
@@ -16,9 +16,9 @@
 #include <memory>
 #include <stdexcept>
 
-#include "stream_wrapper.hpp"
-#include "strict_fstream.hpp"
-#include "compression_types.hpp"
+#include "bxzstr_stream_wrapper.hpp"
+#include "bxzstr_strict_fstream.hpp"
+#include "bxzstr_compression_types.hpp"
 
 namespace bxz {
 class istreambuf : public std::streambuf {

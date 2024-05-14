@@ -58,8 +58,9 @@ be turned on.
 
 ## Configuration
 You can use the library without one of libz, libbz2, or liblzma by
-modifying the `config.hpp` file. For example, to disable lzma support,
-set BXZSTR_LZMA_SUPPORT to 0:
+modifying the `bxzstr_config.hpp` file by undefining the corresponding
+entry or setting it to zero (whichever you prefer).
+For example, to disable lzma and zstd support:
 ```
 #ifndef BXZSTR_CONFIG_HPP
 #define BXZSTR_CONFIG_HPP
@@ -67,7 +68,7 @@ set BXZSTR_LZMA_SUPPORT to 0:
 #define BXZSTR_Z_SUPPORT 1
 #define BXZSTR_BZ2_SUPPORT 1
 #define BXZSTR_LZMA_SUPPORT 0
-#define BXZSTR_ZSTD_SUPPORT 0
+#undef  BXZSTR_ZSTD_SUPPORT
 
 #endif
 ```
@@ -79,7 +80,7 @@ e. g. as part of a larger project, by running
 ```
 cmake .
 ```
-in the root directory. CMake will modify `config.hpp` to match the
+in the root directory. CMake will modify `bxzstr_config.hpp` to match the
 libraries supported on the system. If the
 [find_package](https://cmake.org/cmake/help/v3.0/command/find_package.html)
 command has already been run in CMake, automatic configuration will

@@ -16,7 +16,7 @@
 #include <sstream>
 #include <exception>
 
-#include "stream_wrapper.hpp"
+#include "bxzstr_stream_wrapper.hpp"
 
 namespace bxz {
 /// Exception class thrown by failed zlib operations.
@@ -108,7 +108,7 @@ class z_stream_wrapper : public z_stream, public stream_wrapper {
   private:
     bool is_input;
     int ret;
-}; // class bz_stream_wrapper
+}; // class z_stream_wrapper
 } // namespace detail
 } // namespace bxz
 
