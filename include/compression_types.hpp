@@ -38,8 +38,13 @@ inline Compression detect_type(const char* in_buff_start,const  char* in_buff_en
     return plaintext;
 }
 
+#if defined(BXZSTR_LZMA_STREAM_WRAPPER_HPP) || defined(BXZSTR_BZ_STREAM_WRAPPER_HPP) || defined(BXZSTR_Z_STREAM_WRAPPER_HPP) || defined(BXZSTR_ZSTD_STREAM_WRAPPER_HPP)
 inline void init_stream(const Compression &type, const bool is_input, const int level,
 			std::unique_ptr<detail::stream_wrapper> *strm_p) {
+#else
+inline void init_stream(const Compression &type, const bool, const int,
+			std::unique_ptr<detail::stream_wrapper> *) {
+#endif
     switch (type) {
 #ifdef BXZSTR_LZMA_STREAM_WRAPPER_HPP
         case lzma : strm_p->reset(new detail::lzma_stream_wrapper(is_input, level));
