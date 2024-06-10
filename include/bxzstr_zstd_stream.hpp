@@ -15,7 +15,7 @@
 #include <string>
 #include <exception>
 
-#include "stream_wrapper.hpp"
+#include "bxzstr_stream_wrapper.hpp"
 
 namespace bxz {
 /// Exception class thrown by failed zstd operations.

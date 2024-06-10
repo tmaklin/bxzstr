@@ -16,6 +16,9 @@
 #include <cstring>
 #include <string>
 
+// Place strict_fstream into bxzstr namespace to avoid any clashes
+namespace bxz {
+
 /**
  * This namespace defines wrappers for std::ifstream, std::ofstream, and
  * std::fstream objects. The wrappers perform the following steps:
@@ -205,5 +208,7 @@ public:
 }; // class fstream
 
 } // namespace strict_fstream
+
+} // namespace bxzstr
 
 #endif

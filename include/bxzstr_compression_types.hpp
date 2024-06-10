@@ -10,11 +10,11 @@
 
 #include <exception>
 
-#include "stream_wrapper.hpp"
-#include "bz_stream_wrapper.hpp"
-#include "lzma_stream_wrapper.hpp"
-#include "z_stream_wrapper.hpp"
-#include "zstd_stream_wrapper.hpp"
+#include "bxzstr_stream_wrapper.hpp"
+#include "bxzstr_bz_stream.hpp"
+#include "bxzstr_lzma_stream.hpp"
+#include "bxzstr_z_stream.hpp"
+#include "bxzstr_zstd_stream.hpp"
 
 namespace bxz {
     enum Compression { z, bz2, lzma, zstd, plaintext };

@@ -69,7 +69,7 @@ else()
   endif()
 endif()
 
-configure_file(include/config.hpp.in ${CMAKE_CURRENT_SOURCE_DIR}/include/config.hpp @ONLY)
+configure_file(include/bxzstr_config.hpp.in ${CMAKE_CURRENT_SOURCE_DIR}/include/bxzstr_config.hpp @ONLY)
 
 if(CMAKE_BUILD_TYPE MATCHES Debug)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -Wall -Wextra -Wpedantic")
