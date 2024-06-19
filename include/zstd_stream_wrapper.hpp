@@ -47,9 +47,8 @@ class zstd_stream_wrapper : public stream_wrapper {
 	    this->cctx = ZSTD_createCCtx();
 	    if (this->cctx == NULL) throw zstdException("ZSTD_createCCtx() failed!");
 	    this->ret = ZSTD_CCtx_setParameter(cctx, ZSTD_c_compressionLevel, level);
+	    if (ZSTD_isError(this->ret)) throw zstdException(this->ret);
 	}
-	if (ZSTD_isError(this->ret)) throw zstdException(this->ret);
-
     }
 
     ~zstd_stream_wrapper() {
