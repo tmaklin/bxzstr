@@ -37,6 +37,20 @@ class istreambuf : public std::streambuf {
         out_buff = new char [buff_size];
         setg(out_buff, out_buff, out_buff);
     }
+    istreambuf(std::streambuf * _sbuf_p, Compression type, std::size_t _buff_size = default_buff_size)
+            : sbuf_p(_sbuf_p),
+	      strm_p(nullptr),
+	      buff_size(_buff_size),
+	      auto_detect(false),
+	      auto_detect_run(false),
+        type(type) {
+        assert(sbuf_p);
+        in_buff = new char [buff_size];
+        in_buff_start = in_buff;
+        in_buff_end = in_buff;
+        out_buff = new char [buff_size];
+        setg(out_buff, out_buff, out_buff);
+    }
     istreambuf(const istreambuf &) = delete;
     istreambuf(istreambuf &&) = default;
     istreambuf & operator = (const istreambuf &) = delete;
@@ -260,6 +274,12 @@ class istream : public std::istream {
     explicit istream(std::streambuf * sbuf_p) : std::istream(new istreambuf(sbuf_p)) {
         exceptions(std::ios_base::badbit);
     }
+    istream(std::istream & is, Compression type) : std::istream(new istreambuf(is.rdbuf(), type)) {
+        exceptions(std::ios_base::badbit);
+    }
+    explicit istream(std::streambuf * sbuf_p, Compression type) : std::istream(new istreambuf(sbuf_p, type)) {
+        exceptions(std::ios_base::badbit);
+    }
     virtual ~istream() { delete rdbuf(); }
 }; // class istream
 
@@ -296,29 +316,31 @@ class strict_fstream_holder {
 class ifstream : public detail::strict_fstream_holder< strict_fstream::ifstream >,
 		 public std::istream {
   public:
-    ifstream() : std::istream(new istreambuf(_fs.rdbuf())) {}
+    ifstream(Compression type = none) : std::istream(type == none ?
+        new istreambuf(_fs.rdbuf()) : new istreambuf(_fs.rdbuf(), type)) {}
     explicit ifstream(const std::string& filename,
-		      std::ios_base::openmode mode = std::ios_base::in)
+		      std::ios_base::openmode mode = std::ios_base::in, Compression type = none)
             : detail::strict_fstream_holder< strict_fstream::ifstream >(filename, mode),
-            std::istream(new istreambuf(_fs.rdbuf())),
+            std::istream(type == none ? new istreambuf(_fs.rdbuf()) : new istreambuf(_fs.rdbuf(), type)),
 	    filename(filename),
-	    mode(mode) {
+	    mode(mode),
+      type(type) {
         this->setstate(_fs.rdstate());
         exceptions(std::ios_base::badbit);
     }
-    ifstream(const ifstream& other) : ifstream(other.filename, other.mode) {}
+    ifstream(const ifstream& other) : ifstream(other.filename, other.mode, other.type) {}
     virtual ~ifstream() { if (rdbuf()) delete rdbuf(); }
 
 
     void open(const std::string &filename,
-	      std::ios_base::openmode mode = std::ios_base::in) {
+	      std::ios_base::openmode mode = std::ios_base::in, Compression type = none) {
 	this->~ifstream();
-	new (this) ifstream(filename, mode);
+	new (this) ifstream(filename, mode, type);
     }
     void open(const char* filename,
-	      std::ios_base::openmode mode = std::ios_base::in) {
+	      std::ios_base::openmode mode = std::ios_base::in, Compression type = none) {
 	this->~ifstream();
-	new (this) ifstream(filename, mode);
+	new (this) ifstream(filename, mode, type);
     }
     bool is_open() const { return _fs.is_open(); }
     void close() { _fs.close(); }
@@ -326,6 +348,7 @@ class ifstream : public detail::strict_fstream_holder< strict_fstream::ifstream 
   private:
     std::string filename;
     std::ios_base::openmode mode;
+    Compression type;
 }; // class ifstream
 
 class ofstream : public detail::strict_fstream_holder< strict_fstream::ofstream >,
