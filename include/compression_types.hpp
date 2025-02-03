@@ -17,7 +17,7 @@
 #include "zstd_stream_wrapper.hpp"
 
 namespace bxz {
-    enum Compression { z, bz2, lzma, zstd, plaintext };
+    enum Compression { z, bz2, lzma, zstd, plaintext, none };
 inline Compression detect_type(const char* in_buff_start,const  char* in_buff_end) {
     const unsigned char b0 = *reinterpret_cast<const  unsigned char * >(in_buff_start);
     const unsigned char b1 = *reinterpret_cast<const  unsigned char * >(in_buff_start + 1);
