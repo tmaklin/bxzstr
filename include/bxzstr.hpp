@@ -37,20 +37,8 @@ class istreambuf : public std::streambuf {
         out_buff = new char [buff_size];
         setg(out_buff, out_buff, out_buff);
     }
-    istreambuf(std::streambuf * _sbuf_p, Compression type, std::size_t _buff_size = default_buff_size)
-            : sbuf_p(_sbuf_p),
-	      strm_p(nullptr),
-	      buff_size(_buff_size),
-	      auto_detect(false),
-	      auto_detect_run(false),
-        type(type) {
-        assert(sbuf_p);
-        in_buff = new char [buff_size];
-        in_buff_start = in_buff;
-        in_buff_end = in_buff;
-        out_buff = new char [buff_size];
-        setg(out_buff, out_buff, out_buff);
-    }
+    istreambuf(std::streambuf * _sbuf_p, Compression _type, std::size_t _buff_size = default_buff_size)
+            : istreambuf(_sbuf_p, _buff_size, false) { type = _type; }
     istreambuf(const istreambuf &) = delete;
     istreambuf(istreambuf &&) = default;
     istreambuf & operator = (const istreambuf &) = delete;
@@ -328,6 +316,8 @@ class ifstream : public detail::strict_fstream_holder< strict_fstream::ifstream 
         this->setstate(_fs.rdstate());
         exceptions(std::ios_base::badbit);
     }
+    explicit ifstream(const std::string& filename, Compression type)
+              : ifstream(filename, std::ios_base::in, type) {}
     ifstream(const ifstream& other) : ifstream(other.filename, other.mode, other.type) {}
     virtual ~ifstream() { if (rdbuf()) delete rdbuf(); }
 
