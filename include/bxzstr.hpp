@@ -75,7 +75,7 @@ class istreambuf : public std::streambuf {
         return seekpos(pos, which);
     }
 
-    virtual std::streampos seekpos(std::streampos pos, std::ios_base::openmode which = std::ios_base::in | std::ios_base::out){
+    virtual std::streampos seekpos(std::streampos pos, std::ios_base::openmode){
         if(pos == 0){
             seek_to_zero(); // reset the stream
             return 0; // this should not fail
