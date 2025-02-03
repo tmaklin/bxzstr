@@ -13,7 +13,7 @@ functionality of this library remains largely the same.
 
 ## Input detection
 
-The library automatically detects whether the input stream is
+The library can automatically detect whether the input stream is
 compressed or not, and with which algorithm. The detection is based on
 identifying the headers based on the magic numbers:
 * GZip header, starting with **1F 8B**
@@ -22,7 +22,7 @@ identifying the headers based on the magic numbers:
 * LZMA header, starting with **FD 37 7A 58 5A 00**
 * ZSTD header, starting with **28 B5 2F FD**
 
-when no header is identified, the stream is treated as plain text (uncompressed).
+when no header is identified, the stream is treated as plain text (uncompressed). Alternatively, the compression algorithm can be specified by the user.
 
 ## Usage
 The streams can be accessed through 6 classes that function similarly
