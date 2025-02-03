@@ -23,27 +23,11 @@
 namespace bxz {
 class istreambuf : public std::streambuf {
   public:
-    istreambuf(std::streambuf * _sbuf_p, std::size_t _buff_size = default_buff_size,
-	       bool _auto_detect = true)
+    istreambuf(std::streambuf * _sbuf_p, Compression _type = none, std::size_t _buff_size = default_buff_size)
             : sbuf_p(_sbuf_p),
 	      strm_p(nullptr),
-	      buff_size(_buff_size),
-	      auto_detect(_auto_detect),
-	      auto_detect_run(false) {
-        assert(sbuf_p);
-        in_buff = new char [buff_size];
-        in_buff_start = in_buff;
-        in_buff_end = in_buff;
-        out_buff = new char [buff_size];
-        setg(out_buff, out_buff, out_buff);
-    }
-    istreambuf(std::streambuf * _sbuf_p, Compression type, std::size_t _buff_size = default_buff_size)
-            : sbuf_p(_sbuf_p),
-	      strm_p(nullptr),
-	      buff_size(_buff_size),
-	      auto_detect(false),
-	      auto_detect_run(false),
-        type(type) {
+	      type(_type),
+	      buff_size(_buff_size) {
         assert(sbuf_p);
         in_buff = new char [buff_size];
         in_buff_start = in_buff;
@@ -113,9 +97,8 @@ class istreambuf : public std::streambuf {
                     if (in_buff_end == in_buff_start) break; // end of input
                 }
                 // auto detect if the stream contains text or deflate data
-                if (auto_detect && ! auto_detect_run) {
+                if (this->type == none) {
 		    this->type = detect_type(in_buff_start, in_buff_end);
-		    this->auto_detect_run = true;
 		}
                 if (this->type == plaintext) {
                     // simply swap in_buff and out_buff, and adjust pointers
@@ -172,10 +155,8 @@ class istreambuf : public std::streambuf {
     char* in_buff_end;
     char* out_buff;
     std::unique_ptr<detail::stream_wrapper> strm_p;
-    std::size_t buff_size;
-    bool auto_detect;
-    bool auto_detect_run;
     Compression type;
+    std::size_t buff_size;
     std::streampos out_buff_end_abs;
 
     static const std::size_t default_buff_size = (std::size_t)1 << 20;
@@ -268,16 +249,10 @@ class ostreambuf : public std::streambuf {
 
 class istream : public std::istream {
   public:
-    istream(std::istream & is) : std::istream(new istreambuf(is.rdbuf())) {
+    istream(std::istream & is, Compression type = none) : std::istream(new istreambuf(is.rdbuf(), type)) {
         exceptions(std::ios_base::badbit);
     }
-    explicit istream(std::streambuf * sbuf_p) : std::istream(new istreambuf(sbuf_p)) {
-        exceptions(std::ios_base::badbit);
-    }
-    istream(std::istream & is, Compression type) : std::istream(new istreambuf(is.rdbuf(), type)) {
-        exceptions(std::ios_base::badbit);
-    }
-    explicit istream(std::streambuf * sbuf_p, Compression type) : std::istream(new istreambuf(sbuf_p, type)) {
+    explicit istream(std::streambuf * sbuf_p, Compression type = none) : std::istream(new istreambuf(sbuf_p, type)) {
         exceptions(std::ios_base::badbit);
     }
     virtual ~istream() { delete rdbuf(); }
@@ -316,18 +291,19 @@ class strict_fstream_holder {
 class ifstream : public detail::strict_fstream_holder< strict_fstream::ifstream >,
 		 public std::istream {
   public:
-    ifstream(Compression type = none) : std::istream(type == none ?
-        new istreambuf(_fs.rdbuf()) : new istreambuf(_fs.rdbuf(), type)) {}
+    ifstream(Compression type = none) : std::istream(new istreambuf(_fs.rdbuf(), type)) {}
     explicit ifstream(const std::string& filename,
 		      std::ios_base::openmode mode = std::ios_base::in, Compression type = none)
             : detail::strict_fstream_holder< strict_fstream::ifstream >(filename, mode),
-            std::istream(type == none ? new istreambuf(_fs.rdbuf()) : new istreambuf(_fs.rdbuf(), type)),
+            std::istream(new istreambuf(_fs.rdbuf(), type)),
 	    filename(filename),
 	    mode(mode),
       type(type) {
         this->setstate(_fs.rdstate());
         exceptions(std::ios_base::badbit);
     }
+    explicit ifstream(const std::string& filename, Compression type)
+              : ifstream(filename, std::ios_base::in, type) {}
     ifstream(const ifstream& other) : ifstream(other.filename, other.mode, other.type) {}
     virtual ~ifstream() { if (rdbuf()) delete rdbuf(); }
 
