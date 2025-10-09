@@ -17,7 +17,7 @@
 #include "zstd_stream_wrapper.hpp"
 
 namespace bxz {
-    enum Compression { z, bz2, lzma, zstd, plaintext, none };
+    enum Compression { z, gzip, bz2, lzma, zstd, plaintext, none };
 inline Compression detect_type(const char* in_buff_start,const  char* in_buff_end) {
     const unsigned char b0 = *reinterpret_cast<const  unsigned char * >(in_buff_start);
     const unsigned char b1 = *reinterpret_cast<const  unsigned char * >(in_buff_start + 1);
@@ -55,7 +55,9 @@ inline void init_stream(const Compression &type, const bool, const int,
 	break;
 #endif
 #ifdef BXZSTR_Z_STREAM_WRAPPER_HPP
-        case z : strm_p->reset(new detail::z_stream_wrapper(is_input, level));
+        case gzip: strm_p->reset(new detail::z_stream_wrapper(is_input, level, Z_WINDOW_BITS_GZIP));
+    break;
+        case z : strm_p->reset(new detail::z_stream_wrapper(is_input, level, Z_WINDOW_BITS_ZIP));
 	break;
 #endif
 #ifdef BXZSTR_ZSTD_STREAM_WRAPPER_HPP
@@ -81,6 +83,7 @@ inline int bxz_run(const Compression &type) {
 	break; // BZ_RUN
 #endif
 #ifdef BXZSTR_Z_STREAM_WRAPPER_HPP
+        case gzip:
         case z: return 0;
 	break;// Z_NO_FLUSH
 #endif
@@ -102,6 +105,7 @@ inline int bxz_finish(const Compression &type) {
 	break; // BZ_FINISH
 #endif
 #ifdef BXZSTR_Z_STREAM_WRAPPER_HPP
+        case gzip:
         case z: return 4;
 	break; // Z_FINISH
 #endif
