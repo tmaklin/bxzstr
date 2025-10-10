@@ -55,11 +55,14 @@ class zException : public std::exception {
     std::string _msg;
 }; // class zException
 
+#define Z_WINDOW_BITS_GZIP (15+16)
+#define Z_WINDOW_BITS_ZIP 15
+
 namespace detail {
 class z_stream_wrapper : public z_stream, public stream_wrapper {
   public:
     z_stream_wrapper(const bool _is_input = true,
-		     const int _level = Z_DEFAULT_COMPRESSION, const int = 0)
+		     const int _level = Z_DEFAULT_COMPRESSION, const int windowbits = Z_WINDOW_BITS_ZIP)
 	    : is_input(_is_input) {
 	this->zalloc = Z_NULL;
 	this->zfree = Z_NULL;
@@ -69,7 +72,7 @@ class z_stream_wrapper : public z_stream, public stream_wrapper {
 	    z_stream::next_in = Z_NULL;
 	    ret = inflateInit2(this, 15+32);
 	} else {
-	    ret = deflateInit2(this, _level, Z_DEFLATED, 15+16, 8, Z_DEFAULT_STRATEGY);
+	    ret = deflateInit2(this, _level, Z_DEFLATED, windowbits, 8, Z_DEFAULT_STRATEGY);
 	}
 	if (ret != Z_OK) throw zException(this->msg, ret);
     }
