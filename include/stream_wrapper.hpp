@@ -7,7 +7,7 @@
 
 #ifndef BXZSTR_STREAM_WRAPPER_HPP
 #define BXZSTR_STREAM_WRAPPER_HPP
-
+#include <cstdint>
 namespace bxz {
 namespace detail {
 class stream_wrapper {
